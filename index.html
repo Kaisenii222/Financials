@@ -64,11 +64,8 @@ body.pixel .goal-card.type-debt { border-left:6px solid var(--red) !important; }
 body.pixel .goal-card.type-savings { border-left:6px solid var(--green) !important; }
 body.pixel .tab { border:3px solid var(--border2) !important; border-radius:0 !important; font-family:'Press Start 2P',monospace !important; font-size:.3rem !important; }
 body.pixel .tab.active { background:var(--px) !important; color:#fff !important; border-color:var(--px) !important; box-shadow:3px 3px 0 var(--px) !important; }
-body.pixel .news-card { border:3px solid var(--px) !important; border-radius:0 !important; }
 body.pixel .pill { border-radius:0 !important; }
 body.pixel .toast { border:3px solid var(--px) !important; border-radius:0 !important; box-shadow:5px 5px 0 var(--px) !important; font-family:'Press Start 2P',monospace !important; font-size:.32rem !important; }
-body.pixel .news-filter { border-radius:0 !important; border:2px solid var(--border2) !important; font-family:'Press Start 2P',monospace !important; font-size:.28rem !important; }
-body.pixel .news-filter.active { background:var(--px) !important; color:#fff !important; border-color:var(--px) !important; }
 body.pixel .dot { border-radius:0 !important; }
 body.pixel .ccy-search-input { border:3px solid var(--border2) !important; border-radius:0 !important; }
 body.pixel .ccy-dropdown, body.pixel .ccy-opt { border-radius:0 !important; }
@@ -120,11 +117,6 @@ body.forest .prog-bg { border:1px solid var(--border2); border-radius:0 !importa
 body.forest .prog-green { background:repeating-linear-gradient(90deg,var(--green) 0 5px,rgba(93,255,122,0.45) 5px 7px) !important; }
 body.forest .tab { border:2px solid var(--border2) !important; border-radius:0 !important; font-family:'Silkscreen',monospace !important; font-size:.44rem !important; }
 body.forest .tab.active { background:var(--green) !important; color:#030f02 !important; border-color:var(--green) !important; box-shadow:var(--fg) !important; }
-body.forest .news-card { border:2px solid var(--border2) !important; border-radius:0 !important; }
-body.forest .news-card:hover { border-color:var(--green) !important; box-shadow:var(--fg) !important; transform:translate(-1px,-1px); }
-body.forest .news-headline { font-family:'IM Fell English',serif !important; font-size:.88rem !important; }
-body.forest .news-filter { border-radius:0 !important; }
-body.forest .news-filter.active { border-color:var(--green) !important; color:var(--green) !important; background:var(--green-dim) !important; }
 body.forest .toast { border:2px solid var(--green) !important; border-radius:0 !important; box-shadow:var(--fg) !important; font-family:'Silkscreen',monospace !important; font-size:.5rem !important; }
 body.forest .dot { border-radius:0 !important; }
 body.forest .dot-live { box-shadow:0 0 8px var(--green) !important; }
@@ -297,18 +289,7 @@ input:focus,select:focus{border-color:var(--blue)}
 .gain-amber{background:var(--amber-dim);color:var(--amber)}
 .gain-red{background:var(--red-dim);color:var(--red)}
 
-/* NEWS */
-.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.news-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.4rem;cursor:pointer;transition:border-color .2s,background .2s}
-.news-card:hover{border-color:var(--border2);background:var(--surface2)}
-.news-source{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.35rem}
-.news-source-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.news-headline{font-family:var(--sans);font-size:.82rem;font-weight:500;line-height:1.5}
-.news-meta{display:flex;gap:.4rem;flex-wrap:wrap}
-.news-tag{font-family:var(--mono);font-size:.56rem;padding:.05rem .35rem;border-radius:99px;border:1px solid var(--border2);color:var(--muted2)}
-.news-filter-row{display:flex;gap:.4rem;margin-bottom:.75rem;flex-wrap:wrap}
-.news-filter{padding:.22rem .62rem;border-radius:99px;font-family:var(--mono);font-size:.62rem;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s}
-.news-filter.active{background:var(--surface2);color:var(--text);border-color:var(--blue)}
+
 
 /* LOGS */
 .tab-row{display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap}
@@ -332,7 +313,7 @@ input:focus,select:focus{border-color:var(--blue)}
 .toast.show{transform:translateY(0);opacity:1}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{display:inline-block;animation:spin .8s linear infinite}
-@media(max-width:900px){.snapshot-grid,.fx-grid,.g3,.nw-grid{grid-template-columns:1fr 1fr}.goal-create-grid{grid-template-columns:1fr 1fr}.news-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.snapshot-grid,.fx-grid,.g3,.nw-grid{grid-template-columns:1fr 1fr}.goal-create-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){body{padding:1rem 1rem 4rem}.snapshot-grid,.fx-grid,.g2,.g3,.g4,.nw-grid{grid-template-columns:1fr}.goal-create-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -363,7 +344,6 @@ input:focus,select:focus{border-color:var(--blue)}
   <div class="header-right">
     <div class="live-cluster">
       <div><span class="dot" id="fx-dot" style="display:inline-block;vertical-align:middle;margin-right:.35rem"></span><span id="fx-status">fx: —</span></div>
-      <div><span class="dot" id="news-dot" style="display:inline-block;vertical-align:middle;margin-right:.35rem"></span><span id="news-status-lbl">news: —</span></div>
     </div>
     <button class="theme-btn" onclick="toggleTheme()">🌙 dark</button>
   </div>
@@ -530,22 +510,7 @@ input:focus,select:focus{border-color:var(--blue)}
   </div>
 </div>
 
-<!-- NEWS -->
-<div class="section-label">
-  financial news
-  <span id="news-count" style="font-family:var(--mono);font-size:.58rem;color:var(--muted)"></span>
-  <button onclick="loadNews(true)" id="news-ref-btn" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--radius-sm);padding:.18rem .52rem;font-family:var(--mono);font-size:.6rem;cursor:pointer;margin-left:.4rem">↻ refresh</button>
-</div>
-<div class="news-filter-row">
-  <button class="news-filter active" onclick="setNF('all',this)">All</button>
-  <button class="news-filter" onclick="setNF('ph',this)">🇵🇭 PH</button>
-  <button class="news-filter" onclick="setNF('global',this)">🌐 Global</button>
-  <button class="news-filter" onclick="setNF('etf',this)">📈 ETFs</button>
-  <button class="news-filter" onclick="setNF('economy',this)">🏦 Economy</button>
-</div>
-<div id="news-container" style="margin-bottom:1.5rem">
-  <div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:1rem;display:flex;align-items:center;gap:.5rem"><span class="dot dot-amber"></span> loading news…</div>
-</div>
+
 
 <!-- LOGS -->
 <div class="section-label">transaction logs</div>
@@ -579,8 +544,7 @@ let S = {
 };
 
 let allFxRates={}, fxLive=false, fxTs=null;
-let prevIncome=null, liveNews=[], newsLoading=false, newsFilter='all', newsLastFetch=0;
-const NEWS_CACHE = 30*60*1000;
+let prevIncome=null;
 
 /* ═══ HELPERS ═══ */
 const $=(id)=>document.getElementById(id);
@@ -1053,165 +1017,6 @@ window.delEtfEntry=(i)=>{
   renderETF();renderNetWorth();renderLogs();toast('ETF entry removed');
 };
 
-/* ═══ NEWS ═══ */
-const NEWS_API_KEY = '8e24351ad6034393927f06ff09e2c6a6';
-const CORS_PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-];
-
-// Filter → NewsAPI query mapping
-const NEWS_QUERIES = {
-  all:     { q:'finance OR stock market OR economy OR investing', pageSize:20 },
-  ph:      { q:'Philippines economy OR PSEi OR peso OR BSP OR OFW remittance', pageSize:10 },
-  global:  { q:'S&P 500 OR NASDAQ OR stock market OR Federal Reserve', pageSize:10 },
-  etf:     { q:'ETF OR Vanguard OR BlackRock OR index fund investing', pageSize:10 },
-  economy: { q:'inflation OR interest rates OR GDP OR central bank OR CPI', pageSize:10 },
-};
-
-const SEEDS=[
-  {headline:'PSEi edges higher on positive overseas leads, banking stocks lead gains',source:'BusinessWorld',time:'2h ago',filter:'ph',color:'green',tags:['PSEi','PH Banks'],url:'#'},
-  {headline:'BSP holds benchmark rate steady as inflation stays within 2–4% target band',source:'Inquirer Business',time:'3h ago',filter:'ph',color:'amber',tags:['BSP','Rates'],url:'#'},
-  {headline:'Peso strengthens against dollar on improved risk sentiment across Asia',source:'Philippine Star',time:'4h ago',filter:'ph',color:'green',tags:['PHP/USD'],url:'#'},
-  {headline:'OFW remittances hit record high, buoying consumer spending outlook',source:'Manila Bulletin',time:'6h ago',filter:'ph',color:'green',tags:['OFW'],url:'#'},
-  {headline:'S&P 500 climbs as Fed signals potential rate easing later this year',source:'Reuters',time:'1h ago',filter:'global',color:'green',tags:['S&P500','Fed'],url:'#'},
-  {headline:'NASDAQ slips as tech valuations face renewed pressure from bond yields',source:'CNBC',time:'2h ago',filter:'global',color:'red',tags:['NASDAQ'],url:'#'},
-  {headline:'NVIDIA surges past analyst targets on strong data center revenue',source:'Bloomberg',time:'3h ago',filter:'global',color:'green',tags:['NVDA','AI'],url:'#'},
-  {headline:'Gold hits 6-week high on safe-haven demand amid geopolitical uncertainty',source:'Reuters',time:'4h ago',filter:'global',color:'amber',tags:['Gold'],url:'#'},
-  {headline:'Fed minutes reveal split views on timing of next rate move',source:'MarketWatch',time:'4h ago',filter:'economy',color:'amber',tags:['Fed','Rates'],url:'#'},
-  {headline:'US CPI inflation cools slightly, below consensus estimate this month',source:'Reuters',time:'5h ago',filter:'economy',color:'green',tags:['CPI','Inflation'],url:'#'},
-  {headline:'Treasury yields rise as strong data dims hopes for early Fed pivot',source:'Bloomberg',time:'7h ago',filter:'economy',color:'red',tags:['Yields'],url:'#'},
-  {headline:'VOO and QQQ see strong weekly inflows as retail investors buy the dip',source:'ETF.com',time:'2h ago',filter:'etf',color:'green',tags:['VOO','QQQ'],url:'#'},
-  {headline:'Vanguard cuts expense ratios across 168 share classes',source:'Morningstar',time:'5h ago',filter:'etf',color:'green',tags:['Vanguard','Fees'],url:'#'},
-  {headline:'Sector rotation into dividend ETFs accelerates as growth cools',source:"Barron's",time:'6h ago',filter:'etf',color:'amber',tags:['Dividends'],url:'#'},
-  {headline:'BlackRock launches new active ETF targeting dividend growth strategies',source:'ETF.com',time:'7h ago',filter:'etf',color:'blue',tags:['BlackRock'],url:'#'},
-];
-
-// Classify article sentiment/color from title keywords
-function classifyColor(title){
-  const t=(title||'').toLowerCase();
-  if(/\b(surge|soar|jump|rise|gain|rally|climb|high|record|beat|strong|growth|up)\b/.test(t)) return 'green';
-  if(/\b(fall|drop|slip|plunge|decline|lose|crash|down|weak|cut|fear|risk|warning)\b/.test(t)) return 'red';
-  return 'amber';
-}
-
-// Classify which filter tab the article belongs to
-function classifyFilter(title, source){
-  const t=(title+' '+(source||'')).toLowerCase();
-  if(/philippine|manila|psei|peso|bsp|ofw|pag-ibig|bdo|bpi|metrobank/.test(t)) return 'ph';
-  if(/etf|vanguard|blackrock|ishares|index fund|expense ratio|spdr/.test(t)) return 'etf';
-  if(/inflation|cpi|gdp|fed|federal reserve|interest rate|central bank|yield|treasury|ecb/.test(t)) return 'economy';
-  return 'global';
-}
-
-// Extract 1–2 relevant tags from headline
-function extractTags(title){
-  const keywords=[
-    ['PSEi','psei'],['BSP','bsp'],['OFW','ofw'],['PHP/USD','peso'],
-    ['S&P500','s&p 500','s&p500'],['NASDAQ','nasdaq'],['Fed','federal reserve'],
-    ['Gold','gold'],['ETF','etf'],['VOO','voo'],['QQQ','qqq'],['AI','artificial intelligence'],
-    ['NVDA','nvidia'],['CPI','inflation','cpi'],['Yields','yield','treasury'],
-    ['BTC','bitcoin','crypto'],['Oil','crude oil'],['Asia','asia'],['China','china'],
-  ];
-  const found=[];
-  for(const group of keywords){
-    const label=group[0];
-    if(found.length>=2)break;
-    for(let i=1;i<group.length;i++){
-      if(title.toLowerCase().includes(group[i].toLowerCase())){found.push(label);break;}
-    }
-  }
-  return found.length?found:['Finance'];
-}
-
-async function fetchFromNewsAPI(query, pageSize=20){
-  const apiUrl=`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=${pageSize}&apiKey=${NEWS_API_KEY}`;
-  for(const proxyFn of CORS_PROXIES){
-    try{
-      const ctrl=new AbortController();
-      const t=setTimeout(()=>ctrl.abort(),8000);
-      const res=await fetch(proxyFn(apiUrl),{signal:ctrl.signal});
-      clearTimeout(t);
-      if(!res.ok) continue;
-      const data=await res.json();
-      if(data.status==='error'||!data.articles) continue;
-      return data.articles;
-    }catch(e){ continue; }
-  }
-  return null;
-}
-
-async function loadNews(force=false){
-  if(!force&&liveNews.length&&(Date.now()-newsLastFetch)<NEWS_CACHE){renderNews();return;}
-  if(newsLoading&&!force)return;
-  newsLoading=true;
-  setDot('news','amber');setText('news-status-lbl','news: loading…');
-  // Show seeds immediately — page never sits blank
-  liveNews=[...SEEDS];
-  renderNews();
-  setText('news-count','· '+liveNews.length+' articles');
-  const btn=$('news-ref-btn');
-  if(btn){btn.innerHTML='<span class="spinning">↻</span>';btn.disabled=true;}
-  try{
-    const q=NEWS_QUERIES[newsFilter]||NEWS_QUERIES.all;
-    const articles=await fetchFromNewsAPI(q.q, q.pageSize);
-    if(articles&&articles.length){
-      const fresh=articles
-        .filter(a=>a.title&&a.title!=='[Removed]'&&a.source?.name)
-        .map(a=>({
-          headline: a.title.replace(/\s*-\s*[^-]+$/, '').trim(), // strip " - Source Name" suffix
-          source:   a.source.name,
-          time:     getAge(a.publishedAt),
-          url:      a.url||'#',
-          filter:   classifyFilter(a.title, a.source.name),
-          color:    classifyColor(a.title),
-          tags:     extractTags(a.title),
-        }));
-      if(fresh.length>=3){
-        // Deduplicate by first 30 chars of headline
-        const seen=new Set();
-        liveNews=fresh.filter(a=>{
-          const k=a.headline.substring(0,30).toLowerCase();
-          if(seen.has(k))return false;seen.add(k);return true;
-        }).slice(0,24);
-        newsLastFetch=Date.now();
-        setText('news-count','· '+liveNews.length+' articles · live ✓');
-        setDot('news','live');setText('news-status-lbl','news: live ✓');
-        renderNews();
-        return;
-      }
-    }
-    // API didn't return usable results — stick with seeds
-    setText('news-count','· '+liveNews.length+' articles · cached');
-    setDot('news','red');setText('news-status-lbl','news: cached');
-  }catch(e){
-    setDot('news','red');setText('news-status-lbl','news: error');
-  }finally{
-    newsLoading=false;
-    if(btn){btn.innerHTML='↻ refresh';btn.disabled=false;}
-  }
-}
-function setNF(f,btn){
-  newsFilter=f;
-  document.querySelectorAll('.news-filter').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  const stale=Date.now()-newsLastFetch>60000;
-  if(stale)loadNews(true);else renderNews();
-}
-function renderNews(){
-  const cont=$('news-container');if(!cont)return;
-  const list=liveNews.filter(n=>newsFilter==='all'||n.filter===newsFilter);
-  const display=list.length?list:SEEDS.filter(n=>newsFilter==='all'||n.filter===newsFilter);
-  if(!display.length){cont.innerHTML='<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);padding:1rem">No articles for this filter.</div>';return;}
-  const cm={blue:'var(--blue)',green:'var(--green)',amber:'var(--amber)',red:'var(--red)'};
-  cont.innerHTML=`<div class="news-grid">${display.map(n=>`<a class="news-card" href="${n.url||'#'}" target="_blank" rel="noopener noreferrer">
-    <div class="news-source"><span class="news-source-dot" style="background:${cm[n.color]||'var(--blue)'}"></span>${n.source}<span style="margin-left:auto">${n.time||''}</span></div>
-    <div class="news-headline">${n.headline}</div>
-    <div class="news-meta">${(n.tags||[]).map(t=>`<span class="news-tag">${t}</span>`).join('')}</div>
-  </a>`).join('')}</div>`;
-}
-
 /* ═══ TABS ═══ */
 function switchTab(id,btn){
   const row=btn?.closest('.tab-row');
@@ -1246,9 +1051,7 @@ function init(){
   $('al-goals').value=S.alloc.goals;$('al-etf').value=S.alloc.etf;$('al-disc').value=S.alloc.disc;
   refreshAll();
   fetchFX();
-  loadNews(false);
   setInterval(fetchFX,60000);
-  setInterval(()=>{if(!document.hidden&&!newsLoading)loadNews(false);},NEWS_CACHE);
   // Keyboard shortcuts
   $('income-inp').addEventListener('keydown',e=>{if(e.key==='Enter')setIncome();});
   $('new-exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
