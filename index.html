@@ -60,6 +60,7 @@ body.pixel .prog-bg { border:2px solid var(--border2); border-radius:0 !importan
 body.pixel .prog-fill { border-radius:0 !important; }
 body.pixel .prog-green { background:repeating-linear-gradient(90deg,var(--green) 0 6px,#009966 6px 8px) !important; }
 body.pixel .prog-red { background:repeating-linear-gradient(90deg,var(--red) 0 6px,#cc0033 6px 8px) !important; }
+body.pixel .prog-amber { background:repeating-linear-gradient(90deg,var(--amber) 0 6px,#cc8800 6px 8px) !important; }
 body.pixel .goal-card { border:3px solid var(--px) !important; border-radius:0 !important; }
 body.pixel .goal-card.type-debt { border-left:6px solid var(--red) !important; }
 body.pixel .goal-card.type-savings { border-left:6px solid var(--green) !important; }
@@ -72,6 +73,7 @@ body.pixel .ccy-search-input { border:3px solid var(--border2) !important; borde
 body.pixel .ccy-dropdown, body.pixel .ccy-opt { border-radius:0 !important; }
 body.pixel input[type=range].alloc-range { border-radius:0 !important; height:10px !important; }
 body.pixel input[type=range].alloc-range::-webkit-slider-thumb { border-radius:0 !important; width:14px !important; height:20px !important; }
+body.pixel .emerg-panel-card { border:3px solid var(--px) !important; border-radius:0 !important; }
 body.forest {
   --bg:#060d05; --surface:#0c1809; --surface2:#12220e; --surface3:#1a2f14;
   --border:rgba(80,190,60,0.13); --border2:rgba(110,210,80,0.24);
@@ -134,6 +136,7 @@ body.forest .val-big { font-family:var(--mono) !important; text-shadow:var(--fg)
 body.forest .etf-tracker-card { border:2px solid var(--border2) !important; border-radius:0 !important; }
 body.forest .etf-tracker-card:hover { border-color:var(--green) !important; }
 body.forest .goal-create-form { border:2px dashed var(--border2) !important; border-radius:0 !important; }
+body.forest .emerg-panel-card { border:2px solid var(--amber) !important; border-radius:0 !important; box-shadow:0 0 12px rgba(255,224,109,0.12) !important; }
 @keyframes forestLivePulse { 0%{box-shadow:0 0 0 0 rgba(93,255,122,0.5)}70%{box-shadow:0 0 0 8px rgba(93,255,122,0)}100%{box-shadow:0 0 0 0 rgba(93,255,122,0)} }
 body.forest .dot-live { animation:forestLivePulse 2s infinite !important; }
 
@@ -144,14 +147,12 @@ a{color:inherit;text-decoration:none}
 .header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border)}
 .header-left h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;font-family:var(--sans)}
 .header-left h1 span{color:var(--green)}
-/* FIX: header-meta uses mono (data/time) but slightly larger for readability */
 .header-meta{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:.25rem;letter-spacing:.04em}
 .header-right{display:flex;align-items:center;gap:.75rem}
 .live-cluster{text-align:right;font-family:var(--mono);font-size:.62rem;color:var(--muted);line-height:1.8}
 .theme-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.4rem .8rem;cursor:pointer;color:var(--text);font-family:var(--mono);font-size:.68rem;transition:all .15s}
 .theme-btn:hover{border-color:var(--blue)}
 
-/* FIX: section-label — larger, better contrast, sans for heading portion */
 .section-label{
   font-family:var(--sans);
   font-size:.7rem;
@@ -175,7 +176,6 @@ a{color:inherit;text-decoration:none}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
 .snapshot-grid{display:grid;grid-template-columns:minmax(150px,1fr) minmax(210px,1.6fr) minmax(150px,1fr);gap:1rem;margin-bottom:1.25rem}
 
-/* FIX: val-big and labels — sans for labels, mono only for numbers */
 .val-big{font-family:var(--mono);font-size:1.7rem;font-weight:600;line-height:1.1}
 .val-med{font-family:var(--mono);font-size:1.1rem;font-weight:500}
 .label{font-size:.63rem;font-family:var(--sans);font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
@@ -202,10 +202,9 @@ input:focus,select:focus{border-color:var(--blue)}
 .btn-sm{padding:.32rem .7rem;font-size:.68rem}
 .btn-xs{padding:.2rem .5rem;font-size:.62rem}
 
-/* FIX: progress bar — fill radius always matches container */
 .prog-bg{background:var(--surface3);border-radius:99px;height:7px;overflow:hidden;margin:.4rem 0}
 .prog-fill{height:100%;border-radius:inherit;transition:width .6s cubic-bezier(.25,.8,.25,1)}
-.prog-green{background:var(--green)}.prog-red{background:var(--red)}.prog-blue{background:var(--blue)}
+.prog-green{background:var(--green)}.prog-red{background:var(--red)}.prog-blue{background:var(--blue)}.prog-amber{background:var(--amber)}
 .prog-labels{display:flex;justify-content:space-between;font-size:.65rem;font-family:var(--mono);color:var(--muted)}
 
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(61,214,140,.5)}70%{box-shadow:0 0 0 6px rgba(61,214,140,0)}100%{box-shadow:0 0 0 0 rgba(61,214,140,0)}}
@@ -215,7 +214,6 @@ input:focus,select:focus{border-color:var(--blue)}
 .dot-amber{background:var(--amber);animation:pulse 1.4s ease-in-out infinite}
 .dot-red{background:var(--red)}
 
-/* FIX: slider pulse animation when linked sliders adjust */
 @keyframes sliderPulse{0%{box-shadow:0 0 0 0 rgba(96,165,250,.6)}70%{box-shadow:0 0 0 8px rgba(96,165,250,0)}100%{box-shadow:0 0 0 0 rgba(96,165,250,0)}}
 .alloc-range.linked-flash::-webkit-slider-thumb{animation:sliderPulse .45s ease-out}
 .alloc-range.linked-flash::-moz-range-thumb{box-shadow:0 0 0 6px rgba(96,165,250,.3)}
@@ -261,14 +259,12 @@ input:focus,select:focus{border-color:var(--blue)}
 .ccy-opt-rate{color:var(--amber);font-size:.62rem}
 .ccy-no-res{padding:.5rem .6rem;font-family:var(--mono);font-size:.68rem;color:var(--muted)}
 
-/* CONVERTER SWAP */
 .conv-dir-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
 .conv-dir-label{font-family:var(--sans);font-size:.82rem;font-weight:600}
 .conv-swap-btn{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.28rem .65rem;cursor:pointer;font-family:var(--mono);font-size:.65rem;color:var(--muted2);transition:all .18s}
 .conv-swap-btn:hover{border-color:var(--blue);color:var(--blue)}
 .conv-swap-icon{display:inline-block;transition:transform .35s cubic-bezier(.4,0,.2,1)}
 .conv-swap-btn.swapped .conv-swap-icon{transform:rotate(180deg)}
-/* FIX: converter modes — same min-height to prevent layout jump */
 .conv-from-wrap{display:none;min-height:130px}.conv-from-wrap.active{display:block}
 .conv-ccy-sel{display:flex;gap:.35rem;margin-bottom:.5rem}
 .conv-ccy-sel select{flex:1}
@@ -300,7 +296,6 @@ input:focus,select:focus{border-color:var(--blue)}
 .alloc-slider-label{flex:1;font-weight:500;letter-spacing:.04em}
 .alloc-slider-pct{min-width:3.5rem;text-align:right;font-size:.9rem;font-weight:700;transition:color .2s}
 .alloc-slider-php{color:var(--muted);font-size:.65rem;min-width:5.5rem;text-align:right}
-/* FIX: slider link indicator */
 .alloc-link-hint{font-family:var(--mono);font-size:.58rem;color:var(--muted);text-align:center;margin:.2rem 0 -.4rem;opacity:.7;letter-spacing:.04em}
 input[type=range].alloc-range{
   -webkit-appearance:none;appearance:none;
@@ -328,14 +323,53 @@ input[type=range].alloc-range::-webkit-slider-thumb:hover{transform:scale(1.18);
 input[type=range].goals-range::-webkit-slider-thumb{background:var(--red)}
 input[type=range].etf-range::-webkit-slider-thumb{background:var(--blue)}
 input[type=range].disc-range::-webkit-slider-thumb{background:var(--muted2)}
+input[type=range].emerg-range::-webkit-slider-thumb{background:var(--amber)}
 input[type=range].goals-range::-moz-range-thumb{background:var(--red)}
 input[type=range].etf-range::-moz-range-thumb{background:var(--blue)}
 input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
+input[type=range].emerg-range::-moz-range-thumb{background:var(--amber)}
 .alloc-summary-bar{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
 .alloc-bar-big{display:flex;height:9px;border-radius:99px;overflow:hidden;gap:2px}
 .alloc-bar-legend{display:flex;justify-content:space-between;font-size:.62rem;font-family:var(--mono);color:var(--muted);margin-top:.5rem;flex-wrap:wrap;gap:.35rem}
 .alloc-total-badge{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--green);padding:.12rem .55rem;border-radius:99px;background:var(--green-dim);border:1px solid var(--green-border);transition:all .2s}
 .alloc-total-badge.over{color:var(--red);background:var(--red-dim);border-color:var(--red-border)}
+
+/* EMERGENCY FUND PANEL */
+.emerg-panel-card{
+  background:var(--surface);
+  border:1px solid var(--amber-border);
+  border-radius:var(--radius);
+  padding:1.25rem;
+  margin-bottom:1.5rem;
+  transition:border-color .2s,background .3s;
+  position:relative;
+  overflow:hidden;
+}
+.emerg-panel-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--amber-dim) 0%,transparent 60%);
+  pointer-events:none;
+}
+.emerg-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.emerg-panel-title{display:flex;align-items:center;gap:.6rem;font-family:var(--sans);font-size:.95rem;font-weight:700;color:var(--amber)}
+.emerg-panel-badge{font-family:var(--mono);font-size:.6rem;padding:.12rem .45rem;border-radius:6px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.emerg-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+.emerg-stat-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .9rem;position:relative;z-index:1}
+.emerg-stat-label{font-size:.6rem;font-family:var(--sans);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.emerg-stat-val{font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--amber);line-height:1.1}
+.emerg-stat-sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.15rem}
+.emerg-edit-row{display:flex;gap:.75rem;align-items:flex-end;margin-bottom:.85rem;position:relative;z-index:1;flex-wrap:wrap}
+.emerg-edit-block{flex:1;min-width:140px}
+.emerg-edit-label{font-size:.6rem;font-family:var(--sans);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;display:flex;align-items:center;gap:.35rem}
+.emerg-edit-label span{font-family:var(--mono);color:var(--amber);font-size:.7rem;font-style:normal;text-transform:none;letter-spacing:0}
+.emerg-progress-wrap{position:relative;z-index:1}
+.emerg-eta-box{background:var(--surface2);border:1px solid var(--amber-border);border-radius:var(--radius-sm);padding:.6rem .85rem;margin-top:.75rem;display:flex;align-items:center;gap:.75rem;position:relative;z-index:1;flex-wrap:wrap}
+.emerg-eta-icon{font-size:1.4rem;flex-shrink:0}
+.emerg-eta-text{flex:1}
+.emerg-eta-main{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--amber)}
+.emerg-eta-sub{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.1rem}
+.emerg-months-badge{font-family:var(--mono);font-size:.7rem;padding:.2rem .55rem;border-radius:99px;background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber);white-space:nowrap;flex-shrink:0}
+.emerg-done-banner{background:var(--green-dim);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:.65rem .9rem;font-family:var(--mono);font-size:.78rem;color:var(--green);text-align:center;margin-top:.75rem;position:relative;z-index:1}
 
 /* GOALS */
 .goal-create-form{background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem}
@@ -350,7 +384,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 .goal-emoji{font-size:1.1rem}
 .goal-title{font-family:var(--sans);font-size:.92rem;font-weight:600}
 .goal-controls{display:flex;gap:.35rem;align-items:center;flex-shrink:0}
-/* FIX: goal ETA shows calendar date */
 .goal-eta{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:.35rem}
 .goal-action-row{display:flex;gap:.4rem;margin-top:.65rem;flex-wrap:wrap}
 .goal-action-row input{flex:1;min-width:110px}
@@ -368,11 +401,9 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 .etf-name-disp{font-size:.66rem;color:var(--muted);margin-top:.05rem;font-family:var(--mono)}
 .etf-stats-row{display:flex;gap:1.5rem;flex-wrap:wrap;margin:.5rem 0;font-family:var(--mono);font-size:.72rem;color:var(--muted2)}
 .etf-stats-row span{color:var(--text);font-weight:500}
-/* FIX: sparkline */
 .etf-sparkline{margin:.45rem 0 .1rem}
 
 /* COMPARISON */
-/* FIX: sortable headers */
 .compare-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.74rem}
 .compare-table th{color:var(--muted);font-weight:400;text-align:left;padding:.44rem .65rem;border-bottom:1px solid var(--border);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;cursor:default}
 .compare-table th.sortable{cursor:pointer;user-select:none;transition:color .15s}
@@ -409,7 +440,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 .alloc-card{margin-bottom:1rem}
 .nw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
 
-/* FIX: toast — safe-area-inset-bottom for mobile keyboards */
 .toast{
   position:fixed;
   bottom:max(2rem, calc(env(safe-area-inset-bottom) + 1rem));
@@ -430,12 +460,11 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{display:inline-block;animation:spin .8s linear infinite}
 
-/* FIX: save indicator */
 .save-indicator{font-family:var(--mono);font-size:.58rem;color:var(--muted);opacity:0;transition:opacity .4s}
 .save-indicator.visible{opacity:1}
 
-@media(max-width:900px){.snapshot-grid,.fx-grid,.g3,.nw-grid{grid-template-columns:1fr 1fr}.goal-create-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){body{padding:1rem 1rem 4rem}.snapshot-grid,.fx-grid,.g2,.g3,.g4,.nw-grid{grid-template-columns:1fr}.goal-create-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.snapshot-grid,.fx-grid,.g3,.nw-grid,.emerg-stats-grid{grid-template-columns:1fr 1fr}.goal-create-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){body{padding:1rem 1rem 4rem}.snapshot-grid,.fx-grid,.g2,.g3,.g4,.nw-grid,.emerg-stats-grid{grid-template-columns:1fr}.goal-create-grid{grid-template-columns:1fr}.emerg-edit-row{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -466,7 +495,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="live-cluster">
       <div><span class="dot" id="fx-dot" style="display:inline-block;vertical-align:middle;margin-right:.35rem"></span><span id="fx-status">fx: —</span></div>
     </div>
-    <!-- FIX: save indicator next to theme button -->
     <span class="save-indicator" id="save-indicator">saved ✓</span>
     <button class="theme-btn" onclick="toggleTheme()">🌙 dark</button>
   </div>
@@ -475,11 +503,9 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 <!-- FX PANEL -->
 <div class="section-label">exchange rates — live</div>
 <div class="fx-grid">
-  <!-- Card A -->
   <div class="card">
     <div class="ccy-wrap">
       <span class="ccy-icon">⌕</span>
-      <!-- FIX: aria roles on currency inputs -->
       <input class="ccy-search-input" id="ccy-a" type="text" placeholder="search currency…" autocomplete="off"
         role="combobox" aria-expanded="false" aria-controls="drop-a" aria-autocomplete="list"
         oninput="filterCcy('a',this.value)" onfocus="openDrop('a')" onblur="closeDrop('a')" onkeydown="navDrop(event,'a')">
@@ -496,7 +522,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="fx-row"><span style="color:var(--muted)">Your income</span><span>₱<span id="inc-lbl-a">—</span> = <span class="c-blue" id="fx-inc-a">—</span> <span id="fx-ic-a">CAD</span></span></div>
     <div class="fx-row"><span style="color:var(--muted)">1 <span id="code-a2">CAD</span> =</span><span id="fx-tophp-a">—</span></div>
   </div>
-  <!-- Card B -->
   <div class="card">
     <div class="ccy-wrap">
       <span class="ccy-icon">⌕</span>
@@ -517,7 +542,7 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="fx-row"><span style="color:var(--muted)">1 <span id="code-b2">USD</span> =</span><span id="fx-tophp-b">—</span></div>
   </div>
 
-  <!-- ══ CONVERTER CARD ══ -->
+  <!-- CONVERTER CARD -->
   <div class="card">
     <div class="conv-dir-bar">
       <div class="conv-dir-label" id="conv-dir-label">⇄ live converter</div>
@@ -526,8 +551,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
         <span id="conv-swap-lbl">swap direction</span>
       </button>
     </div>
-
-    <!-- Mode A: PHP → Foreign -->
     <div class="conv-from-wrap active" id="conv-php-mode">
       <div class="fx-input-lbl">PHP amount</div>
       <input type="number" id="conv-in" placeholder="e.g. 5000" oninput="runConv()" style="font-size:.9rem;padding:.5rem .7rem;margin-bottom:.5rem">
@@ -543,8 +566,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
         <span style="font-size:.66rem;color:var(--muted)" id="conv-code-b">USD</span>
       </div>
     </div>
-
-    <!-- Mode B: Foreign → PHP -->
     <div class="conv-from-wrap" id="conv-fgn-mode">
       <div class="fx-input-lbl">foreign currency amount</div>
       <div class="conv-ccy-sel">
@@ -562,7 +583,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
       </div>
       <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.35rem" id="conv-rev-rate">rate: —</div>
     </div>
-
     <div class="fx-updated" id="fx-ts">last updated: —</div>
   </div>
 </div>
@@ -597,7 +617,10 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="sub" id="disp-pct">0% of income is free</div>
     <div class="alloc-bar" id="alloc-bar"></div>
     <div style="display:flex;gap:.5rem;font-size:.6rem;flex-wrap:wrap;margin-top:.25rem;font-family:var(--mono)">
-      <span><span class="c-red">▪</span> goals</span><span><span class="c-blue">▪</span> etf</span><span><span class="c-muted">▪</span> you</span>
+      <span><span class="c-red">▪</span> goals</span>
+      <span><span class="c-blue">▪</span> etf</span>
+      <span><span class="c-muted">▪</span> you</span>
+      <span><span class="c-amber">▪</span> emergency</span>
     </div>
   </div>
 </div>
@@ -605,16 +628,15 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 <!-- ALLOCATION SLIDERS -->
 <div class="section-label">allocation — drag to split your disposable income</div>
 <div class="card alloc-card">
-  <!-- FIX: linked sliders hint -->
   <div class="alloc-link-hint" id="alloc-link-hint" style="text-align:right;margin-bottom:.5rem;font-family:var(--mono);font-size:.6rem;color:var(--muted)">⇄ sliders are linked — total always = 100%</div>
   <div class="alloc-slider-group">
     <div class="alloc-slider-row">
       <div class="alloc-slider-header">
         <span class="alloc-slider-label c-red">⚔ goals &amp; debt</span>
-        <span class="alloc-slider-pct c-red" id="al-goals-pct">45%</span>
+        <span class="alloc-slider-pct c-red" id="al-goals-pct">40%</span>
         <span class="alloc-slider-php" id="al-goals-php">₱0</span>
       </div>
-      <input type="range" class="alloc-range goals-range" id="al-goals" min="0" max="100" value="45"
+      <input type="range" class="alloc-range goals-range" id="al-goals" min="0" max="100" value="40"
         oninput="adjustAlloc('goals',+this.value)">
     </div>
     <div class="alloc-slider-row">
@@ -629,21 +651,131 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="alloc-slider-row">
       <div class="alloc-slider-header">
         <span class="alloc-slider-label c-muted">💸 discretionary</span>
-        <span class="alloc-slider-pct" id="al-disc-pct" style="color:var(--muted2)">30%</span>
+        <span class="alloc-slider-pct" id="al-disc-pct" style="color:var(--muted2)">25%</span>
         <span class="alloc-slider-php" id="al-disc-php">₱0</span>
       </div>
-      <input type="range" class="alloc-range disc-range" id="al-disc" min="0" max="100" value="30"
+      <input type="range" class="alloc-range disc-range" id="al-disc" min="0" max="100" value="25"
         oninput="adjustAlloc('disc',+this.value)">
+    </div>
+    <div class="alloc-slider-row">
+      <div class="alloc-slider-header">
+        <span class="alloc-slider-label c-amber">🛡 emergency fund</span>
+        <span class="alloc-slider-pct c-amber" id="al-emerg-pct">10%</span>
+        <span class="alloc-slider-php" id="al-emerg-php">₱0</span>
+      </div>
+      <input type="range" class="alloc-range emerg-range" id="al-emerg" min="0" max="100" value="10"
+        oninput="adjustAlloc('emergency',+this.value)">
     </div>
   </div>
   <div class="alloc-summary-bar">
     <div class="alloc-bar-big" id="alloc-bar-big"></div>
     <div class="alloc-bar-legend">
-      <span><span class="c-red">▪</span> goals <strong id="al-g-lbl">45%</strong></span>
+      <span><span class="c-red">▪</span> goals <strong id="al-g-lbl">40%</strong></span>
       <span><span class="c-blue">▪</span> etf <strong id="al-e-lbl">25%</strong></span>
-      <span><span style="color:var(--muted2)">▪</span> you <strong id="al-d-lbl">30%</strong></span>
+      <span><span style="color:var(--muted2)">▪</span> you <strong id="al-d-lbl">25%</strong></span>
+      <span><span class="c-amber">▪</span> emergency <strong id="al-em-lbl">10%</strong></span>
       <span class="alloc-total-badge" id="alloc-total">= 100%</span>
     </div>
+  </div>
+</div>
+
+<!-- EMERGENCY FUND PANEL -->
+<div class="section-label">🛡 emergency fund — details &amp; tracker</div>
+<div class="emerg-panel-card">
+  <div class="emerg-panel-header">
+    <div class="emerg-panel-title">
+      <span>🛡</span>
+      <span>Emergency Fund</span>
+      <span class="emerg-panel-badge" id="emerg-badge">0% funded</span>
+    </div>
+    <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted)">
+      recommended: 3–6× monthly expenses
+    </div>
+  </div>
+
+  <!-- Stat blocks -->
+  <div class="emerg-stats-grid">
+    <div class="emerg-stat-block">
+      <div class="emerg-stat-label">monthly contribution</div>
+      <div class="emerg-stat-val" id="emerg-monthly-contrib">₱0</div>
+      <div class="emerg-stat-sub" id="emerg-monthly-pct">0% of disposable</div>
+    </div>
+    <div class="emerg-stat-block">
+      <div class="emerg-stat-label">already saved</div>
+      <div class="emerg-stat-val" style="color:var(--green)" id="emerg-saved-disp">₱0</div>
+      <div class="emerg-stat-sub" id="emerg-saved-sub">of ₱0 target</div>
+    </div>
+    <div class="emerg-stat-block">
+      <div class="emerg-stat-label">still needed</div>
+      <div class="emerg-stat-val" style="color:var(--muted2)" id="emerg-remaining-disp">₱0</div>
+      <div class="emerg-stat-sub" id="emerg-remaining-sub">to reach target</div>
+    </div>
+  </div>
+
+  <!-- Editable inputs -->
+  <div class="emerg-edit-row">
+    <div class="emerg-edit-block">
+      <div class="emerg-edit-label">
+        Target amount (₱)
+        <span>— how much do you want in your fund?</span>
+      </div>
+      <div style="display:flex;gap:.4rem">
+        <input type="number" id="emerg-target-inp" placeholder="e.g. 39000 (3× expenses)"
+          style="font-size:.82rem" oninput="updateEmergencyLive()">
+        <button class="btn btn-sm btn-amber" onclick="setEmergencyTarget()">set</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.3rem" id="emerg-target-hint">
+        tip: 3× fixed expenses = ₱0
+      </div>
+    </div>
+    <div class="emerg-edit-block">
+      <div class="emerg-edit-label">
+        Amount already saved (₱)
+        <span>— what you have right now</span>
+      </div>
+      <div style="display:flex;gap:.4rem">
+        <input type="number" id="emerg-saved-inp" placeholder="e.g. 5000"
+          style="font-size:.82rem" oninput="updateEmergencyLive()">
+        <button class="btn btn-sm btn-green" onclick="setEmergencySaved()">update</button>
+      </div>
+    </div>
+    <div class="emerg-edit-block" style="flex:.6;min-width:120px">
+      <div class="emerg-edit-label">quick-add to saved</div>
+      <div style="display:flex;gap:.4rem">
+        <input type="number" id="emerg-add-inp" placeholder="₱ add" style="font-size:.82rem">
+        <button class="btn btn-sm btn-green" onclick="addToEmergency()">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="emerg-progress-wrap">
+    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-bottom:.3rem">
+      <span id="emerg-prog-left">₱0 saved</span>
+      <span id="emerg-prog-right">target: ₱0</span>
+    </div>
+    <div class="prog-bg" style="height:10px">
+      <div class="prog-fill prog-amber" id="emerg-prog-fill" style="width:0%"></div>
+    </div>
+    <div class="prog-labels">
+      <span id="emerg-prog-pct">0% complete</span>
+      <span id="emerg-prog-rem">₱0 remaining</span>
+    </div>
+  </div>
+
+  <!-- ETA box (shown when target > saved > 0) -->
+  <div class="emerg-eta-box" id="emerg-eta-box" style="display:none">
+    <div class="emerg-eta-icon">📅</div>
+    <div class="emerg-eta-text">
+      <div class="emerg-eta-main" id="emerg-eta-date">—</div>
+      <div class="emerg-eta-sub" id="emerg-eta-sub">—</div>
+    </div>
+    <div class="emerg-months-badge" id="emerg-months-badge">— months</div>
+  </div>
+
+  <!-- Done banner (shown when fully funded) -->
+  <div class="emerg-done-banner" id="emerg-done-banner" style="display:none">
+    🎉 Emergency fund fully funded! You're protected. Consider boosting ETF or goals allocation.
   </div>
 </div>
 
@@ -652,7 +784,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 <div class="card" style="margin-bottom:1.5rem;overflow-x:auto">
   <div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.65rem">
     Monthly ETF budget: <strong id="cmp-budget" style="color:var(--blue)">₱0</strong> — projected over <strong>1 yr, 5 yr, 10 yr</strong>
-    <!-- FIX: sort hint -->
     <span style="color:var(--muted);margin-left:.75rem;font-size:.6rem">click column headers to sort</span>
   </div>
   <table class="compare-table">
@@ -728,7 +859,7 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 let S = {
   income: 13000,
   expenses: [{id:1,name:'WiFi',amount:1500}],
-  alloc: {goals:45, etf:25, disc:30},
+  alloc: {goals:40, etf:25, disc:25, emergency:10},
   goals: [],
   etfSlots: [
     {id:1, ticker:'QQQM', name:'Invesco NASDAQ 100 ETF', shares:0, costBasisPhp:0},
@@ -736,7 +867,9 @@ let S = {
   ],
   etfHistory: [],
   incomeHistory: [],
-  ccyA: 'CAD', ccyB: 'USD'
+  ccyA: 'CAD', ccyB: 'USD',
+  emergencyTarget: 0,
+  emergencySaved: 0,
 };
 
 let allFxRates={}, fxLive=false, fxTs=null;
@@ -746,7 +879,7 @@ let cmpSortCol = null, cmpSortAsc = false;
 let _cmpData = [];
 
 /* ═══ PERSIST ═══ */
-const SAVE_KEY = 'myfinances_v2';
+const SAVE_KEY = 'myfinances_v3';
 let _saveTimer = null;
 
 function saveState() {
@@ -761,6 +894,8 @@ function saveState() {
       incomeHistory: S.incomeHistory,
       ccyA: S.ccyA,
       ccyB: S.ccyB,
+      emergencyTarget: S.emergencyTarget,
+      emergencySaved: S.emergencySaved,
     }));
     const ind = $('save-indicator');
     if (ind) { ind.classList.add('visible'); clearTimeout(_saveTimer); _saveTimer = setTimeout(() => ind.classList.remove('visible'), 1800); }
@@ -769,19 +904,38 @@ function saveState() {
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    // try new key first, fall back to old key for migration
+    let raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('myfinances_v2');
     if (!raw) return;
     const saved = JSON.parse(raw);
-    // Merge carefully — don't overwrite structure
     if (saved.income != null) S.income = saved.income;
     if (Array.isArray(saved.expenses)) S.expenses = saved.expenses;
-    if (saved.alloc) S.alloc = { goals: saved.alloc.goals ?? 45, etf: saved.alloc.etf ?? 25, disc: saved.alloc.disc ?? 30 };
+    if (saved.alloc) {
+      S.alloc = {
+        goals:     saved.alloc.goals     ?? 40,
+        etf:       saved.alloc.etf       ?? 25,
+        disc:      saved.alloc.disc      ?? 25,
+        emergency: saved.alloc.emergency ?? 10,
+      };
+      // normalize if old data sums to 100 without emergency
+      const sum = S.alloc.goals + S.alloc.etf + S.alloc.disc + S.alloc.emergency;
+      if(sum !== 100) {
+        // proportionally scale to 100
+        const scale = 100 / sum;
+        ['goals','etf','disc','emergency'].forEach((k,i,arr) => {
+          if(i < arr.length-1) S.alloc[k] = Math.round(S.alloc[k]*scale);
+        });
+        S.alloc.emergency = 100 - S.alloc.goals - S.alloc.etf - S.alloc.disc;
+      }
+    }
     if (Array.isArray(saved.goals)) S.goals = saved.goals;
     if (Array.isArray(saved.etfSlots)) S.etfSlots = saved.etfSlots;
     if (Array.isArray(saved.etfHistory)) S.etfHistory = saved.etfHistory;
     if (Array.isArray(saved.incomeHistory)) S.incomeHistory = saved.incomeHistory;
     if (saved.ccyA) S.ccyA = saved.ccyA;
     if (saved.ccyB) S.ccyB = saved.ccyB;
+    if (saved.emergencyTarget != null) S.emergencyTarget = saved.emergencyTarget;
+    if (saved.emergencySaved  != null) S.emergencySaved  = saved.emergencySaved;
   } catch(e) { console.warn('Load failed:', e); }
 }
 
@@ -794,12 +948,11 @@ const getUSD=()=>allFxRates['USD']||56.5;
 const fmtPhp=(n)=>'₱'+Math.round(n).toLocaleString();
 const today=()=>new Date().toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'});
 
-/* FIX: calendar ETA */
 function etaDate(months) {
   if (!months || months <= 0) return '';
   const d = new Date();
   d.setMonth(d.getMonth() + months);
-  return d.toLocaleDateString('en-PH', {month:'short', year:'numeric'});
+  return d.toLocaleDateString('en-PH', {month:'long', year:'numeric'});
 }
 
 function getAge(d){const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
@@ -852,7 +1005,7 @@ function applyTheme(){
   if(theme!=='dark')document.body.classList.add(theme);
   const btn=document.querySelector('.theme-btn');
   if(btn)btn.textContent=TICOS[theme];
-  ['al-goals','al-etf','al-disc'].forEach(id=>{const el=$(id);if(el)updateRangeTrack(el);});
+  ['al-goals','al-etf','al-disc','al-emerg'].forEach(id=>{const el=$(id);if(el)updateRangeTrack(el);});
 }
 function toggleTheme(){theme=THEMES[(THEMES.indexOf(theme)+1)%THEMES.length];applyTheme();}
 
@@ -874,7 +1027,7 @@ const CCY=[
   {code:'QAR',name:'Qatari Riyal',flag:'🇶🇦'},{code:'TRY',name:'Turkish Lira',flag:'🇹🇷'},
 ];
 
-/* ═══ FX FETCH — FIX: delay between retries ═══ */
+/* ═══ FX FETCH ═══ */
 const FX_SRCS=[
   ()=>fetch('https://api.exchangerate-api.com/v4/latest/PHP',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>d.rates),
   ()=>fetch('https://open.er-api.com/v6/latest/PHP',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>d.rates),
@@ -918,7 +1071,6 @@ function renderFXCard(slot){
   const opt=$('conv-fgn-opt-'+slot);
   if(opt){opt.value=code;opt.textContent=ccy.flag+' '+code;}
   const inp=$('ccy-'+slot);if(inp&&document.activeElement!==inp)inp.value='';
-  // FIX: update aria-expanded
   const inpEl=$('ccy-'+slot);if(inpEl)inpEl.setAttribute('aria-expanded','false');
 }
 function renderFX(){
@@ -954,7 +1106,7 @@ function toggleConvDir(){
   toast(isSwapped ? 'Converter: Foreign → PHP' : 'Converter: PHP → Foreign');
 }
 
-/* ═══ CCY DROPDOWN — FIX: pointerdown to avoid blur race ═══ */
+/* ═══ CCY DROPDOWN ═══ */
 let cFI={a:-1,b:-1},cT={a:null,b:null};
 function filterCcy(slot,q){
   cFI[slot]=-1;const drop=$('drop-'+slot);
@@ -1005,7 +1157,12 @@ function renderHUD(){
   const sl=$('stress-lbl');
   if(sl){sl.textContent=pct>=70?'healthy — comfortable':pct>=45?'moderate — manageable':pct>=25?'tight — watch spending':'stretched — cut costs';sl.style.color=pct>=60?'var(--green)':pct>=35?'var(--amber)':'var(--red)';}
   const ab=$('alloc-bar');
-  if(ab)ab.innerHTML=[{f:S.alloc.goals,c:'var(--red)'},{f:S.alloc.etf,c:'var(--blue)'},{f:S.alloc.disc,c:'var(--muted)'}].map(a=>`<div class="alloc-seg" style="flex:${a.f||0.01};background:${a.c}"></div>`).join('');
+  if(ab)ab.innerHTML=[
+    {f:S.alloc.goals,c:'var(--red)'},
+    {f:S.alloc.etf,c:'var(--blue)'},
+    {f:S.alloc.disc,c:'var(--muted)'},
+    {f:S.alloc.emergency,c:'var(--amber)'},
+  ].map(a=>`<div class="alloc-seg" style="flex:${a.f||0.01};background:${a.c}"></div>`).join('');
 }
 
 /* ═══ INCOME & EXPENSES ═══ */
@@ -1034,33 +1191,42 @@ function addExp(){
 }
 function delExp(id){S.expenses=S.expenses.filter(e=>e.id!==id);refreshAll();toast('Removed');saveState();}
 
-/* ═══ ALLOCATION — FIX: always derives third as 100-a-b, pulse on linked sliders ═══ */
+/* ═══ ALLOCATION — 4 linked sliders, always sums to 100 ═══ */
 function adjustAlloc(changed, newVal){
   newVal = Math.max(0, Math.min(100, Math.round(newVal)));
-  const others = ['goals','etf','disc'].filter(k=>k!==changed);
+  const ALL_KEYS = ['goals','etf','disc','emergency'];
+  const others = ALL_KEYS.filter(k => k !== changed);
   const remaining = 100 - newVal;
-  const sumOthers = S.alloc[others[0]] + S.alloc[others[1]];
+  const sumOthers = others.reduce((s,k) => s + S.alloc[k], 0);
 
   if(sumOthers === 0){
-    S.alloc[others[0]] = Math.round(remaining / 2);
-    // FIX: derive second as remainder not another round
-    S.alloc[others[1]] = remaining - S.alloc[others[0]];
+    // distribute remaining equally
+    const each = Math.floor(remaining / others.length);
+    others.forEach((k, i) => {
+      S.alloc[k] = i < others.length - 1 ? each : remaining - each * (others.length - 1);
+    });
   } else {
-    const ratio = S.alloc[others[0]] / sumOthers;
-    S.alloc[others[0]] = Math.round(remaining * ratio);
-    // FIX: always derive third — guarantees sum = 100
-    S.alloc[others[1]] = remaining - S.alloc[others[0]];
+    let assigned = 0;
+    others.forEach((k, i) => {
+      if(i < others.length - 1){
+        S.alloc[k] = Math.round(remaining * S.alloc[k] / sumOthers);
+        assigned += S.alloc[k];
+      } else {
+        // last one gets the remainder to guarantee sum = 100
+        S.alloc[k] = remaining - assigned;
+      }
+    });
   }
   S.alloc[changed] = newVal;
-  ['goals','etf','disc'].forEach(k => S.alloc[k] = Math.max(0, S.alloc[k]));
+  ALL_KEYS.forEach(k => S.alloc[k] = Math.max(0, S.alloc[k]));
 
-  // FIX: pulse the affected sliders briefly
+  // pulse the affected sliders
   others.forEach(k => {
-    const rangeId = k === 'goals' ? 'al-goals' : k === 'etf' ? 'al-etf' : 'al-disc';
+    const rangeId = k === 'goals' ? 'al-goals' : k === 'etf' ? 'al-etf' : k === 'disc' ? 'al-disc' : 'al-emerg';
     const el = $(rangeId);
     if(el) {
       el.classList.remove('linked-flash');
-      void el.offsetWidth; // force reflow
+      void el.offsetWidth;
       el.classList.add('linked-flash');
       setTimeout(() => el.classList.remove('linked-flash'), 500);
     }
@@ -1071,6 +1237,7 @@ function adjustAlloc(changed, newVal){
   renderGoals();
   renderComparison();
   renderNetWorth();
+  renderEmergencyPanel();
   saveState();
 }
 
@@ -1079,15 +1246,17 @@ function updateRangeTrack(el){
   let color = 'var(--muted2)';
   if(el.id==='al-goals') color='var(--red)';
   else if(el.id==='al-etf') color='var(--blue)';
+  else if(el.id==='al-emerg') color='var(--amber)';
   el.style.background=`linear-gradient(to right,${color} 0%,${color} ${pct}%,var(--surface3) ${pct}%,var(--surface3) 100%)`;
 }
 
 function updateAllocSliders(){
   const disp = getDisp();
   const cfg = {
-    goals: {range:'al-goals', pct:'al-goals-pct', php:'al-goals-php'},
-    etf:   {range:'al-etf',   pct:'al-etf-pct',   php:'al-etf-php'},
-    disc:  {range:'al-disc',  pct:'al-disc-pct',  php:'al-disc-php'},
+    goals:     {range:'al-goals', pct:'al-goals-pct', php:'al-goals-php'},
+    etf:       {range:'al-etf',   pct:'al-etf-pct',   php:'al-etf-php'},
+    disc:      {range:'al-disc',  pct:'al-disc-pct',  php:'al-disc-php'},
+    emergency: {range:'al-emerg', pct:'al-emerg-pct', php:'al-emerg-php'},
   };
   for(const [k, ids] of Object.entries(cfg)){
     const v = S.alloc[k];
@@ -1096,25 +1265,125 @@ function updateAllocSliders(){
     setText(ids.pct, v+'%');
     setText(ids.php, fmtPhp(Math.round(disp * v / 100)));
   }
-  // FIX: always exactly 100
-  const tot = S.alloc.goals + S.alloc.etf + S.alloc.disc;
+  const tot = S.alloc.goals + S.alloc.etf + S.alloc.disc + S.alloc.emergency;
   const totEl = $('alloc-total');
   if(totEl){
     totEl.textContent = '= '+tot+'%';
     totEl.className = 'alloc-total-badge'+(tot!==100?' over':'');
   }
-  setText('al-g-lbl', S.alloc.goals+'%');
-  setText('al-e-lbl', S.alloc.etf+'%');
-  setText('al-d-lbl', S.alloc.disc+'%');
+  setText('al-g-lbl',  S.alloc.goals+'%');
+  setText('al-e-lbl',  S.alloc.etf+'%');
+  setText('al-d-lbl',  S.alloc.disc+'%');
+  setText('al-em-lbl', S.alloc.emergency+'%');
   const bigBar=$('alloc-bar-big');
   if(bigBar) bigBar.innerHTML=[
-    {f:S.alloc.goals,c:'var(--red)'},
-    {f:S.alloc.etf,c:'var(--blue)'},
-    {f:S.alloc.disc,c:'var(--muted2)'}
+    {f:S.alloc.goals,     c:'var(--red)'},
+    {f:S.alloc.etf,       c:'var(--blue)'},
+    {f:S.alloc.disc,      c:'var(--muted2)'},
+    {f:S.alloc.emergency, c:'var(--amber)'},
   ].map(a=>`<div class="alloc-seg" style="flex:${a.f||0.01};background:${a.c}"></div>`).join('');
 }
 
-/* ═══ COMPARISON — FIX: sortable columns ═══ */
+/* ═══ EMERGENCY FUND PANEL ═══ */
+function setEmergencyTarget(){
+  const v = parseFloat($('emerg-target-inp').value);
+  if(!v || v <= 0){ toast('⚠ Enter a valid target amount'); return; }
+  S.emergencyTarget = v;
+  $('emerg-target-inp').value = '';
+  renderEmergencyPanel();
+  toast('Emergency target → ' + fmtPhp(v));
+  saveState();
+}
+
+function setEmergencySaved(){
+  const v = parseFloat($('emerg-saved-inp').value);
+  if(v == null || isNaN(v) || v < 0){ toast('⚠ Enter a valid saved amount'); return; }
+  S.emergencySaved = v;
+  $('emerg-saved-inp').value = '';
+  renderEmergencyPanel();
+  toast('Emergency saved → ' + fmtPhp(v));
+  saveState();
+}
+
+function addToEmergency(){
+  const v = parseFloat($('emerg-add-inp').value);
+  if(!v || v <= 0){ toast('⚠ Enter an amount to add'); return; }
+  S.emergencySaved += v;
+  $('emerg-add-inp').value = '';
+  renderEmergencyPanel();
+  toast('+' + fmtPhp(v) + ' added to emergency fund');
+  saveState();
+}
+
+/* live preview as user types into the inputs */
+function updateEmergencyLive(){
+  const tInp = $('emerg-target-inp');
+  const sInp = $('emerg-saved-inp');
+  const tempTarget = tInp && tInp.value ? parseFloat(tInp.value) : S.emergencyTarget;
+  const tempSaved  = sInp && sInp.value ? parseFloat(sInp.value) : S.emergencySaved;
+  renderEmergencyPanel(tempTarget, tempSaved);
+}
+
+function renderEmergencyPanel(overrideTarget, overrideSaved){
+  const disp = getDisp();
+  const monthlyContrib = Math.round(disp * S.alloc.emergency / 100);
+  const target = overrideTarget != null ? overrideTarget : S.emergencyTarget;
+  const saved  = overrideSaved  != null ? overrideSaved  : S.emergencySaved;
+  const remaining = Math.max(0, target - saved);
+  const pct = target > 0 ? Math.min(100, Math.round(saved / target * 100)) : 0;
+  const isDone = saved >= target && target > 0;
+  const fixed3x = totalFixed() * 3;
+
+  // stat blocks
+  setText('emerg-monthly-contrib', fmtPhp(monthlyContrib));
+  setText('emerg-monthly-pct', S.alloc.emergency + '% of disposable');
+  setText('emerg-saved-disp', fmtPhp(saved));
+  setText('emerg-saved-sub', 'of ' + fmtPhp(target) + ' target');
+  setText('emerg-remaining-disp', fmtPhp(remaining));
+  setText('emerg-remaining-sub', target > 0 ? 'to reach target' : 'set a target above');
+  setText('emerg-badge', pct + '% funded');
+
+  // hint
+  setText('emerg-target-hint', 'tip: 3× fixed expenses = ' + fmtPhp(fixed3x));
+
+  // progress
+  setText('emerg-prog-left', fmtPhp(saved) + ' saved');
+  setText('emerg-prog-right', 'target: ' + fmtPhp(target));
+  const fill = $('emerg-prog-fill');
+  if(fill) fill.style.width = pct + '%';
+  setText('emerg-prog-pct', pct + '% complete');
+  setText('emerg-prog-rem', fmtPhp(remaining) + ' remaining');
+
+  // ETA
+  const etaBox = $('emerg-eta-box');
+  const doneBanner = $('emerg-done-banner');
+  if(isDone){
+    if(etaBox) etaBox.style.display = 'none';
+    if(doneBanner) doneBanner.style.display = 'block';
+  } else if(target > 0 && monthlyContrib > 0){
+    const months = Math.ceil(remaining / monthlyContrib);
+    const calDate = etaDate(months);
+    if(etaBox) etaBox.style.display = 'flex';
+    if(doneBanner) doneBanner.style.display = 'none';
+    setText('emerg-eta-date', calDate || '—');
+    setText('emerg-eta-sub',
+      fmtPhp(monthlyContrib) + '/mo · ' +
+      fmtPhp(remaining) + ' left · fully funded by this date'
+    );
+    setText('emerg-months-badge', months + ' month' + (months !== 1 ? 's' : '') + ' away');
+  } else if(target > 0 && monthlyContrib === 0){
+    if(etaBox) etaBox.style.display = 'flex';
+    if(doneBanner) doneBanner.style.display = 'none';
+    setText('emerg-eta-date', 'No allocation set');
+    setText('emerg-eta-sub', 'Move the emergency fund slider above to start contributing');
+    setText('emerg-months-badge', '— months');
+  } else {
+    if(etaBox) etaBox.style.display = 'none';
+    if(doneBanner) doneBanner.style.display = 'none';
+  }
+}
+
+/* ═══ COMPARISON ═══ */
 const SCNS=[
   {icon:'💸',label:'Spent on lifestyle',note:'gone tomorrow',rate:0,risk:'None',rc:'var(--muted)',spend:true},
   {icon:'🏦',label:'Savings account (BSP)',note:'~1% p.a. — inflation eats it',rate:0.01,risk:'None',rc:'var(--green)'},
@@ -1138,7 +1407,6 @@ function milestone(p){
 
 function sortCmp(col){
   if(cmpSortCol === col){ cmpSortAsc = !cmpSortAsc; } else { cmpSortCol = col; cmpSortAsc = false; }
-  // Update header classes
   [2,3,4,5].forEach(c=>{const th=$(id=`cmp-th-${c}`);if(th)th.className='sortable'+(c===col?' sort-active':'');});
   renderCmpBody();
 }
@@ -1147,7 +1415,6 @@ function renderComparison(){
   const disp=getDisp(),mo=Math.round(disp*S.alloc.etf/100);
   setText('cmp-budget',fmtPhp(mo)+' / month');
   const simple=mo*120;
-
   _cmpData = SCNS.map(sc=>{
     const v1=sc.spend||sc.neg?0:Math.round(fv(mo,sc.rate,12));
     const v5=sc.spend||sc.neg?0:Math.round(fv(mo,sc.rate,60));
@@ -1155,9 +1422,7 @@ function renderComparison(){
     const gain=v10-simple;
     return {...sc, v1, v5, v10, gain};
   });
-
   renderCmpBody();
-
   const bestV=Math.round(fv(mo,0.10,120));
   $('cmp-insight').textContent=mo<=0
     ?'Set your income, expenses, and ETF allocation above to see all 12 projections.'
@@ -1166,10 +1431,8 @@ function renderComparison(){
 
 function renderCmpBody(){
   const tbody=$('cmp-body');if(!tbody)return;
-  const simple = _cmpData.length ? (_cmpData[0].v10 || 0) : 0; // fallback
   const mo = Math.round(getDisp()*S.alloc.etf/100);
   const simpleCalc = mo * 120;
-
   let rows = [..._cmpData];
   if(cmpSortCol !== null){
     rows.sort((a,b)=>{
@@ -1181,7 +1444,6 @@ function renderCmpBody(){
       return cmpSortAsc?(av-bv):(bv-av);
     });
   }
-
   tbody.innerHTML=rows.map(sc=>{
     const f=v=>`<span style="color:${v>simpleCalc?'var(--green)':v>0?'var(--muted2)':'var(--red)'}">${sc.spend?'₱0 — gone':sc.neg?'−₱'+Math.round(mo*6).toLocaleString()+' est.':fmtPhp(v)}</span>`;
     const gainBadge=sc.spend||sc.neg?`<span class="gain-badge gain-red">−100%</span>`:sc.gain>0?`<span class="gain-badge gain-green">+${fmtPhp(sc.gain)}</span>`:`<span class="gain-badge gain-amber">${fmtPhp(sc.gain)}</span>`;
@@ -1195,7 +1457,7 @@ function renderCmpBody(){
   }).join('');
 }
 
-/* ═══ GOALS — FIX: unique IDs on history entries, calendar ETA ═══ */
+/* ═══ GOALS ═══ */
 function createGoal(){
   const name=$('ng-name').value.trim(),target=parseFloat($('ng-target').value);
   const type=$('ng-type').value,emoji=$('ng-emoji').value;
@@ -1211,7 +1473,6 @@ function contributeGoal(id,dir){
   if(isRemove&&g.paid<=0){toast('Nothing to remove');return;}
   const amount=isRemove?-Math.min(v,g.paid):v;
   g.paid=Math.max(0,g.paid+amount);
-  // FIX: each history entry gets a unique ID (not just array index)
   g.history.unshift({hid:Date.now(), date:today(), amount, isRemove});
   $('g-inp-'+id).value='';
   renderGoals();renderNetWorth();renderLogs();
@@ -1227,7 +1488,6 @@ async function delGoal(id){
   if(res.action==='ok'){S.goals=S.goals.filter(g=>g.id!==id);renderGoals();renderNetWorth();renderLogs();toast('Goal deleted');saveState();}
 }
 
-/* FIX: empty state SVG */
 function goalEmptyState(){
   return `<div class="empty-state">
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -1254,7 +1514,6 @@ function renderGoals(){
     const done=g.paid>=g.target,rem=Math.max(0,g.target-g.paid);
     const isDebt=g.type==='debt';
     const months=!done&&perGoal>0?Math.ceil(rem/perGoal):0;
-    // FIX: show calendar date alongside month count
     const calDate = etaDate(months);
     const eta=done?'':(months>0
       ? `at ${fmtPhp(perGoal)}/mo → ~${months} month${months!==1?'s':''} <span style="color:var(--amber)">(${calDate})</span>`
@@ -1279,7 +1538,7 @@ function renderGoals(){
   }).join('');
 }
 
-/* ═══ ETF TRACKER — FIX: sparkline, cost basis derived from history ═══ */
+/* ═══ ETF TRACKER ═══ */
 async function addEtfSlot(){
   const res=await showModal({
     title:'Add ETF slot',body:'Enter the ticker and a friendly name for this position.',
@@ -1314,7 +1573,6 @@ function addShares(id){
   renderETF();renderNetWorth();renderLogs();toast(sh.toFixed(4)+' sh of '+slot.ticker+' added');saveState();
 }
 
-/* FIX: sparkline from etfHistory */
 function buildSparkline(slotId, width=120, height=28){
   const entries = [...S.etfHistory].filter(h=>h.slotId===slotId).reverse();
   if(entries.length < 2) return '<span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">add purchases to see sparkline</span>';
@@ -1334,7 +1592,6 @@ function buildSparkline(slotId, width=120, height=28){
   </svg>`;
 }
 
-/* FIX: ETF slot cost basis re-derived from history on every render for accuracy */
 function getSlotDerived(slotId){
   const relevant = S.etfHistory.filter(h=>h.slotId===slotId);
   return {
@@ -1358,7 +1615,6 @@ function renderETF(){
     </div>`;
     setText('etf-total','₱0');setText('etf-total-usd','≈ $0 USD');setText('etf-slot-count','0 slots');return;
   }
-  // FIX: sync slot data from history before render
   S.etfSlots.forEach(slot=>{
     const d=getSlotDerived(slot.id);
     slot.shares=d.shares;slot.costBasisPhp=d.costBasisPhp;
@@ -1403,9 +1659,8 @@ function renderNetWorth(){
   const el=$('nw-total');if(el){el.textContent=(net>=0?'':'−')+fmtPhp(Math.abs(net));el.style.color=net>=0?'var(--green)':'var(--red)';}
 }
 
-/* ═══ LOGS — FIX: use hid (unique ID) for deletions instead of array index ═══ */
+/* ═══ LOGS ═══ */
 function renderLogs(){
-  // Build goal log using hid for identification
   const allG=[];
   S.goals.forEach(g=>g.history.forEach(h=>allG.push({...h,gName:g.name,gId:g.id,type:g.type})));
   allG.sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -1430,7 +1685,6 @@ function renderLogs(){
     </li>`).join(''):'<li class="history-item" style="color:var(--muted);font-family:var(--mono)">no changes yet</li>';
 }
 
-/* FIX: delGoalEntry uses hid not array index — no more silent wrong-entry deletion */
 window.delGoalEntry=(gid, hid)=>{
   const g=S.goals.find(g=>g.id===gid);if(!g)return;
   const idx=g.history.findIndex(h=>h.hid==hid);
@@ -1441,13 +1695,11 @@ window.delGoalEntry=(gid, hid)=>{
   renderGoals();renderNetWorth();renderLogs();toast('Entry removed');saveState();
 };
 
-/* FIX: delEtfEntry uses unique id not array index */
 window.delEtfEntry=(hid)=>{
   const i=S.etfHistory.findIndex(h=>h.id===hid);
   if(i===-1){toast('Entry not found');return;}
   const h=S.etfHistory[i];
   S.etfHistory.splice(i,1);
-  // FIX: re-derive slot from remaining history (not mutate in place)
   const sl=S.etfSlots.find(s=>s.id===h.slotId);
   if(sl){const d=getSlotDerived(sl.id);sl.shares=d.shares;sl.costBasisPhp=d.costBasisPhp;}
   renderETF();renderNetWorth();renderLogs();toast('ETF entry removed');saveState();
@@ -1473,13 +1725,14 @@ function refreshAll(){
   renderHUD();
   updateAllocSliders();
   renderGoals();renderETF();renderNetWorth();renderComparison();renderLogs();
+  renderEmergencyPanel();
   if(Object.keys(allFxRates).length)renderFX();
   $('undo-inc').style.display=prevIncome!==null?'block':'none';
 }
 
 /* ═══ INIT ═══ */
 function init(){
-  loadState(); // FIX: load persisted state first
+  loadState();
   applyTheme();
   const now=new Date(),h=now.getHours();
   $('date-display').textContent=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()]+', '+now.toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})+'  ·  '+(h<12?'good morning':h<18?'good afternoon':'good evening');
@@ -1491,6 +1744,9 @@ function init(){
   $('ng-target').addEventListener('keydown',e=>{if(e.key==='Enter')createGoal();});
   $('conv-in').addEventListener('keydown',e=>{if(e.key==='Enter')runConv();});
   $('conv-fgn-amt').addEventListener('keydown',e=>{if(e.key==='Enter')runConvReverse();});
+  $('emerg-target-inp').addEventListener('keydown',e=>{if(e.key==='Enter')setEmergencyTarget();});
+  $('emerg-saved-inp').addEventListener('keydown',e=>{if(e.key==='Enter')setEmergencySaved();});
+  $('emerg-add-inp').addEventListener('keydown',e=>{if(e.key==='Enter')addToEmergency();});
 }
 try{init();}catch(e){console.error(e);}
 </script>
