@@ -281,7 +281,7 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 
 /* ══ ANCHOR ══ */
 .anchor-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden}
-.anchor-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,var(--green-dim) 0%,transparent 70%);pointer-events:none}
+.anchor-card::before{content:'absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,var(--green-dim) 0%,transparent 70%);pointer-events:none}
 .freedom-score-big{font-family:var(--mono);font-size:3.5rem;font-weight:700;line-height:1;color:var(--green)}
 .vision-text{font-family:var(--mono);font-size:.8rem;color:var(--muted2);line-height:1.8;font-style:italic;border-left:2px solid var(--green);padding-left:.75rem;margin-top:.75rem}
 .daily-quote{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:.65rem;padding:.55rem .75rem;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:border-color .2s}
@@ -436,7 +436,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </header>
 
-<!-- ══ DAILY ANCHOR ══ -->
 <div class="section-label">your why — daily anchor</div>
 <div class="anchor-card">
   <div style="display:flex;align-items:flex-end;gap:1rem;margin-bottom:1rem">
@@ -460,7 +459,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ FX ══ -->
 <div class="section-label">exchange rates — live</div>
 <div class="fx-grid">
   <div class="card">
@@ -526,7 +524,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ INCOME STREAMS ══ -->
 <div class="section-label">income streams — this month</div>
 <div class="card" style="margin-bottom:1.25rem">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
@@ -544,7 +541,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.3rem" id="streams-note">log payments received as they come in</div>
 </div>
 
-<!-- ══ CASHFLOW CASCADE ══ -->
 <div class="section-label">monthly cashflow — how it flows</div>
 <div class="cascade-grid" style="margin-bottom:1.25rem">
   <div class="hud-block">
@@ -592,7 +588,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ ALLOCATION ══ -->
 <div class="section-label">allocation — drag to split your disposable income</div>
 <div class="card" style="margin-bottom:1.25rem">
   <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:1rem;padding:.55rem .75rem;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--green)">
@@ -638,7 +633,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ SPEND TRACKER ══ -->
 <div class="section-label">spend tracker — today</div>
 <div class="g2" style="margin-bottom:1.25rem">
   <div class="card">
@@ -685,7 +679,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ 48-HOUR IMPULSE SANDBOX ══ -->
 <div class="section-label">48-hour impulse sandbox — want it? prove it.</div>
 <div class="card" style="margin-bottom:1.25rem">
   <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.8rem;line-height:1.8">log anything you're tempted to buy. it locks for <strong style="color:var(--amber)">48 hours</strong>. if you still want it after, you've earned it.</div>
@@ -713,7 +706,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   <div id="sandbox-list"></div>
 </div>
 
-<!-- ══ GOALS — CONNECTED TO ALLOCATION ══ -->
 <div class="section-label">goals — connected to your allocation</div>
 <div class="card" style="background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
   <div class="goal-create-grid">
@@ -725,7 +717,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- goals budget banner -->
 <div class="goals-budget-banner" id="goals-budget-banner">
   <div>
     <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">monthly goals budget (from allocation)</div>
@@ -742,13 +733,13 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   <div style="color:var(--muted);font-size:.78rem;font-family:var(--mono);padding:.3rem 0">No goals yet — create one above!</div>
 </div>
 
-<!-- ══ ETF PORTFOLIO — REAL P&L ══ -->
 <div class="section-label">
   etf portfolio — real P&amp;L
   <button onclick="addEtfSlot()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--radius-sm);padding:.18rem .52rem;font-family:var(--mono);font-size:.6rem;cursor:pointer;margin-left:.4rem;transition:all .15s">+ add</button>
+  <button onclick="fetchETFPrices()" style="background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue);border-radius:var(--radius-sm);padding:.18rem .52rem;font-family:var(--mono);font-size:.6rem;cursor:pointer;margin-left:.4rem;transition:all .15s">↻ fetch live prices</button>
 </div>
 <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.85rem;padding:.55rem .75rem;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--blue)">
-  enter your <strong>cost basis</strong> (what you paid) when buying. update the <strong>current price</strong> whenever you check — this is how you see your actual gain/loss. no real-time feed, just honest manual tracking.
+  enter your <strong>cost basis</strong> (what you paid) when buying. hit <strong>fetch live prices</strong> to automatically update current market values via Yahoo Finance.
 </div>
 <div id="etf-container"></div>
 <div class="etf-summary-card">
@@ -761,7 +752,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ NET WORTH ══ -->
 <div class="section-label">net worth snapshot</div>
 <div class="card" style="margin-bottom:1.5rem">
   <div class="nw-grid">
@@ -772,7 +762,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ COMPARISON ══ -->
 <div class="section-label">what happens to your money — 12 scenarios</div>
 <div class="card" style="margin-bottom:1.5rem;overflow-x:auto">
   <div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.65rem">
@@ -785,7 +774,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   <div class="insight-box" id="cmp-insight">Set your income, expenses, and ETF allocation above to see your projections.</div>
 </div>
 
-<!-- ══ VISION BOARD ══ -->
 <div class="section-label">vision board — what you're working toward</div>
 <div class="card" style="margin-bottom:1.25rem">
   <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.85rem">milestones unlock as your net worth grows.</div>
@@ -796,7 +784,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   </div>
 </div>
 
-<!-- ══ PAYMENT FEES ══ -->
 <div class="section-label">payment fees — what you actually keep</div>
 <div class="card" style="margin-bottom:1.25rem">
   <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.75rem">for freelancers and creators — see exactly what each platform takes</div>
@@ -830,7 +817,6 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
   <div style="margin-top:.65rem;font-family:var(--mono);font-size:.6rem;color:var(--muted)">⚠ fees are approximate. always verify on the platform's official fee page before invoicing.</div>
 </div>
 
-<!-- ══ LOGS ══ -->
 <div class="section-label">transaction logs</div>
 <div class="card" style="margin-bottom:3rem">
   <div class="tab-row">
@@ -856,10 +842,11 @@ let S = {
   expenses: [{id:1,name:'WiFi',amount:1500}],
   alloc: {goals:45, etf:25, disc:30},
   goals: [],
-  // ETF slots now include currentPriceUSD for real P&L
+  // ETF slots now include currentPriceUSD for real P&L, plus VOX as requested
   etfSlots: [
     {id:1, ticker:'QQQM', name:'Invesco NASDAQ 100 ETF', shares:0, costBasisPhp:0, costBasisUSD:0, currentPriceUSD:null, lastPriceUpdate:null},
     {id:2, ticker:'VOO',  name:'Vanguard S&P 500 ETF',   shares:0, costBasisPhp:0, costBasisUSD:0, currentPriceUSD:null, lastPriceUpdate:null},
+    {id:3, ticker:'VOX',  name:'Vanguard Comm. Services', shares:0, costBasisPhp:0, costBasisUSD:0, currentPriceUSD:null, lastPriceUpdate:null},
   ],
   etfHistory: [],
   incomeHistory: [],
@@ -1434,13 +1421,50 @@ function renderGoals(){
   }).join('');
 }
 
-/* ═══ ETF TRACKER — REAL P&L ═══ */
+/* ═══ ETF TRACKER — LIVE API INTEGRATION ═══ */
+async function fetchETFPrices() {
+  if(!S.etfSlots.length) return;
+  toast('Fetching live ETF prices...');
+  let updatedCount = 0;
+  
+  for (const slot of S.etfSlots) {
+    if (!slot.ticker) continue;
+    try {
+      // Fetching Yahoo Finance data via AllOrigins free CORS proxy to bypass client-side CORS blocks
+      const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + slot.ticker)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      // Parse the Yahoo Finance JSON safely
+      const parsed = JSON.parse(data.contents);
+      const price = parsed.chart?.result?.[0]?.meta?.regularMarketPrice;
+
+      if (price && price > 0) {
+        slot.currentPriceUSD = price;
+        slot.lastPriceUpdate = Date.now();
+        updatedCount++;
+      }
+    } catch (e) {
+      console.error(`Failed to fetch live price for ${slot.ticker}`, e);
+    }
+  }
+  
+  if (updatedCount > 0) {
+    renderETF();
+    renderNetWorth();
+    toast(`Live prices updated for ${updatedCount} ETFs ✓`);
+  } else {
+    toast('⚠ Failed to fetch prices. Try updating manually.');
+  }
+}
+
 async function addEtfSlot(){
   const res=await showModal({title:'Add ETF slot',body:'Enter ticker and name for this position.',inputs:[{label:'Ticker symbol',placeholder:'e.g. VOO'},{label:'Name (optional)',placeholder:'e.g. Vanguard S&P 500 ETF'}],buttons:[{label:'cancel',value:'cancel',cls:'btn-ghost'},{label:'add slot',value:'ok',cls:'btn-green'}]});
   if(res.action!=='ok'||!res.input.trim())return;
   const ticker=res.input.trim().toUpperCase(),name=res.input2.trim()||ticker;
   S.etfSlots.push({id:Date.now(),ticker,name,shares:0,costBasisPhp:0,costBasisUSD:0,currentPriceUSD:null,lastPriceUpdate:null});
   renderETF();toast('Added: '+ticker);
+  fetchETFPrices(); // Instantly try to fetch the new ticker's price
 }
 async function delEtfSlot(id){
   const sl=S.etfSlots.find(s=>s.id===id);if(!sl)return;
@@ -1590,8 +1614,9 @@ function init(){
   applyTheme();
   const now=new Date(),h=now.getHours();
   $('date-display').textContent=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()]+', '+now.toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})+'  ·  '+(h<12?'good morning':h<18?'good afternoon':'good evening');
-  refreshAll();fetchFX();
+  refreshAll();fetchFX();fetchETFPrices();
   setInterval(fetchFX,60000);setInterval(renderSandbox,60000);
+  setInterval(fetchETFPrices,300000); // Auto-update ETF prices every 5 minutes
   $('new-exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
   $('ng-target').addEventListener('keydown',e=>{if(e.key==='Enter')createGoal();});
   $('conv-in').addEventListener('keydown',e=>{if(e.key==='Enter')runConv();});
