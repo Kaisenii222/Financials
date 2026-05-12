@@ -393,6 +393,51 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 .toast.show{transform:translateY(0);opacity:1}
 @media(max-width:900px){.cascade-grid,.fx-grid,.g3,.nw-grid,.vision-grid,.fee-result-grid,.inv-stats-grid{grid-template-columns:1fr 1fr}.goal-create-grid{grid-template-columns:1fr 1fr}.income-split-grid{grid-template-columns:1fr}}
 @media(max-width:640px){body{padding:1rem 1rem 4rem}.cascade-grid,.fx-grid,.g2,.g3,.g4,.nw-grid,.vision-grid,.fee-result-grid,.inv-stats-grid{grid-template-columns:1fr}.goal-create-grid{grid-template-columns:1fr}.income-split-grid{grid-template-columns:1fr}}
+
+/* ══ SPEND TREND CHART ══ */
+.trend-chart-wrap{overflow-x:auto;padding-bottom:.25rem}
+.trend-chart-svg{display:block;min-width:300px}
+.trend-bar{transition:opacity .15s}
+.trend-bar:hover{opacity:.75}
+
+/* ══ MONTH ARCHIVE ══ */
+.archive-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;border-radius:var(--radius-sm);background:var(--surface2);border:1px solid var(--border);margin-bottom:.4rem;gap:.5rem;flex-wrap:wrap}
+.archive-month{font-family:var(--mono);font-size:.78rem;font-weight:600;color:var(--blue);min-width:4rem}
+.archive-stats{display:flex;gap:1.2rem;flex:1;justify-content:flex-end;flex-wrap:wrap}
+.archive-stat{text-align:right}
+.archive-stat .label{font-size:.55rem}
+.archive-stat .val{font-family:var(--mono);font-size:.78rem;font-weight:600}
+
+/* ══ CUSTOM CATEGORIES ══ */
+.cat-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .5rem;border-radius:99px;font-family:var(--mono);font-size:.62rem;border:1px solid var(--border);background:var(--surface2);margin:.15rem}
+.cat-chip-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;padding:0 .1rem;line-height:1}
+
+/* ══ VISION BOARD IMPROVEMENTS ══ */
+.vision-custom-form{display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-end;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.vision-custom-form input{flex:1;min-width:100px}
+
+/* ══ EXPORT/IMPORT BUTTONS ══ */
+.hdr-actions{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+
+/* ══ MOBILE FIXES ══ */
+@media(max-width:640px){
+  .inv-add-row{grid-template-columns:1fr 1fr;row-gap:.55rem}
+  .inv-add-row > div:nth-child(3){grid-column:1/3}
+  .inv-add-row > div:nth-child(4),.inv-add-row > div:nth-child(5){flex:1}
+  .inv-add-row{display:grid}
+  .inv-stats-grid{grid-template-columns:1fr 1fr}
+  .hdr-actions{gap:.2rem}
+  .hdr-actions .theme-btn{padding:.2rem .45rem;font-size:.6rem}
+  header{padding:.5rem .75rem}
+  .nav-tabs{gap:.15rem;padding:.25rem .4rem}
+  .tab{font-size:.62rem;padding:.3rem .5rem}
+  .archive-stats{gap:.6rem}
+}
+@media(max-width:480px){
+  .inv-stats-grid{grid-template-columns:1fr}
+  .archive-row{flex-direction:column;align-items:flex-start}
+  .archive-stats{justify-content:flex-start}
+}
 </style>
 </head>
 <body>
@@ -436,8 +481,12 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <div class="live-cluster">
       <div><span class="dot" id="fx-dot" style="display:inline-block;vertical-align:middle;margin-right:.35rem"></span><span id="fx-status">fx: —</span></div>
     </div>
-    <button class="theme-btn" onclick="toggleTheme()">🌙 dark</button>
-    <button class="theme-btn" onclick="resetAllData()" title="clear all saved data" style="color:var(--red);border-color:var(--red-border)">🗑 reset</button>
+    <div class="hdr-actions">
+      <button class="theme-btn" onclick="exportData()" title="download backup JSON">⬇ export</button>
+      <button class="theme-btn" onclick="importData()" title="restore from backup JSON">⬆ import</button>
+      <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()">🌙 dark</button>
+      <button class="theme-btn" onclick="resetAllData()" title="clear all saved data" style="color:var(--red);border-color:var(--red-border)">🗑 reset</button>
+    </div>
   </div>
 </header>
 
@@ -688,6 +737,28 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
       <div id="cat-breakdown" style="font-family:var(--mono);font-size:.68rem;color:var(--muted2)"></div>
     </div>
   </div>
+  <!-- Spend trend chart -->
+  <div class="card" style="margin-top:.75rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem">
+      <div class="label">daily spend — last 14 days</div>
+      <div style="display:flex;gap:.35rem;font-family:var(--mono);font-size:.58rem;color:var(--muted)">
+        <span id="trend-avg-label">avg / day</span>
+      </div>
+    </div>
+    <div class="trend-chart-wrap"><svg id="trend-svg" class="trend-chart-svg" height="72"></svg></div>
+    <div id="trend-legend" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.45rem;font-family:var(--mono);font-size:.58rem"></div>
+  </div>
+</div>
+
+<!-- ══ CUSTOM SPEND CATEGORIES ══ -->
+<div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+  <span>spend categories</span>
+  <button onclick="showAddCategoryModal()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--radius-sm);padding:.18rem .52rem;font-family:var(--mono);font-size:.6rem;cursor:pointer">+ add custom</button>
+</div>
+<div class="card" style="margin-bottom:1.25rem">
+  <div style="font-family:var(--mono);font-size:.68rem;color:var(--muted2);margin-bottom:.6rem">default categories are always active. add your own below to track specific habits.</div>
+  <div id="cat-chips-default" style="margin-bottom:.5rem"></div>
+  <div id="cat-chips-custom"></div>
 </div>
 
 <!-- ══ 48-HOUR IMPULSE SANDBOX ══ -->
@@ -840,8 +911,23 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 <!-- ══ VISION BOARD ══ -->
 <div class="section-label">vision board — what you're working toward</div>
 <div class="card" style="margin-bottom:1.25rem">
-  <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.85rem">milestones unlock as your net worth grows.</div>
+  <div style="font-family:var(--mono);font-size:.72rem;color:var(--muted2);margin-bottom:.85rem">milestones unlock as your net worth grows. add your own dream purchases below.</div>
   <div class="vision-grid" id="vision-grid"></div>
+  <div class="vision-custom-form">
+    <div style="flex:2;min-width:110px">
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.25rem">dream item</div>
+      <input type="text" id="vision-custom-name" placeholder="e.g. gaming PC, camera lens…">
+    </div>
+    <div style="flex:1;min-width:90px">
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.25rem">cost (₱)</div>
+      <input type="number" id="vision-custom-cost" placeholder="e.g. 45000">
+    </div>
+    <div style="flex:.5;min-width:60px">
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.25rem">icon</div>
+      <input type="text" id="vision-custom-icon" placeholder="🎯" maxlength="2" style="text-align:center">
+    </div>
+    <button class="btn btn-sm btn-ghost" style="height:2.42rem;align-self:flex-end" onclick="addVisionItem()">+ add</button>
+  </div>
   <div style="margin-top:.75rem;border-top:1px solid var(--border);padding-top:.75rem">
     <div class="label" style="margin-bottom:.5rem">financial milestones</div>
     <div class="milestone-timeline" id="milestone-timeline"></div>
@@ -890,11 +976,13 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
     <button class="tab" onclick="switchTab('log-etf',this)">investments</button>
     <button class="tab" onclick="switchTab('log-income',this)">income history</button>
     <button class="tab" onclick="switchTab('log-spend',this)">spend log</button>
+    <button class="tab" onclick="switchTab('log-archive',this)">📅 monthly</button>
   </div>
   <div class="tab-content active" id="log-goals"><ul class="history-list" id="list-goals"></ul></div>
   <div class="tab-content" id="log-etf"><ul class="history-list" id="list-etf"></ul></div>
   <div class="tab-content" id="log-income"><ul class="history-list" id="list-income"></ul></div>
   <div class="tab-content" id="log-spend"><ul class="history-list" id="list-spend-log"></ul></div>
+  <div class="tab-content" id="log-archive"><div id="archive-list" style="padding:.25rem 0"></div></div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -903,6 +991,67 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 /* ═══ PERSISTENCE ═══ */
 const SAVE_KEY='myfinances_v1';
 function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){console.warn('Save failed',e);}}
+/* ═══ EXPORT / IMPORT ═══ */
+function exportData(){
+  const blob=new Blob([JSON.stringify({...S,_exportDate:new Date().toISOString(),_version:2},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='myfinances_backup_'+todayKey()+'.json';a.click();URL.revokeObjectURL(a.href);
+  toast('✓ backup downloaded');
+}
+function importData(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const data=JSON.parse(await file.text());
+      delete data._exportDate;delete data._version;
+      Object.assign(S,data);saveState();refreshAll();renderLogs();renderCheckin();
+      toast('✓ data restored from '+file.name);
+    }catch(err){toast('⚠ invalid backup file — could not restore');}
+  };
+  input.click();
+}
+
+/* ═══ MONTH ROLLOVER ═══ */
+function checkMonthRollover(){
+  const thisMonth=thisMonthKey();
+  if(!S.lastActiveMonth){S.lastActiveMonth=thisMonth;saveState();return;}
+  if(S.lastActiveMonth===thisMonth)return;
+  // New month — archive last month
+  const lastMonth=S.lastActiveMonth;
+  if(!S.monthArchives)S.monthArchives=[];
+  const monthSpends=S.spends.filter(s=>s.date.startsWith(lastMonth));
+  const monthInvested=S.investments.filter(i=>(i.monthKey||'')===lastMonth).reduce((s,i)=>s+(i.totalPhp||0),0);
+  const goalContribs=S.goals.reduce((sum,g)=>sum+g.history.filter(h=>(h.isoDate||'').startsWith(lastMonth)).reduce((s,h)=>s+Math.abs(h.amount||0),0),0);
+  const catBreak={};monthSpends.forEach(s=>catBreak[s.cat]=(catBreak[s.cat]||0)+s.amt);
+  S.monthArchives.unshift({month:lastMonth,totalSpent:monthSpends.reduce((s,x)=>s+x.amt,0),invested:monthInvested,goalsContrib:goalContribs,spendCount:monthSpends.length,catBreak});
+  // Reset streams for new month
+  S.streams.forEach(st=>{st.receivedUSD=0;});
+  S.lastActiveMonth=thisMonth;
+  saveState();
+  const mLabel=new Date(lastMonth+'-01').toLocaleString('en-PH',{month:'long',year:'numeric'});
+  toast('📅 '+mLabel+' archived — streams reset for new month');
+}
+
+/* ═══ RENDER ARCHIVE ═══ */
+function renderArchive(){
+  const el=$('archive-list');if(!el)return;
+  const archives=S.monthArchives||[];
+  if(!archives.length){el.innerHTML='<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);padding:.5rem 0">no archived months yet — check back after your first month-end.</div>';return;}
+  el.innerHTML=archives.map(a=>{
+    const d=new Date(a.month+'-01');const label=d.toLocaleString('en-PH',{month:'long',year:'numeric'});
+    const topCat=Object.entries(a.catBreak||{}).sort((x,y)=>y[1]-x[1])[0];
+    return`<div class="archive-row">
+      <span class="archive-month">${label}</span>
+      <div class="archive-stats">
+        <div class="archive-stat"><div class="label">spent</div><div class="val" style="color:var(--amber)">${fmtPhp(a.totalSpent)}</div></div>
+        <div class="archive-stat"><div class="label">invested</div><div class="val" style="color:var(--blue)">${fmtPhp(a.invested)}</div></div>
+        <div class="archive-stat"><div class="label">goals</div><div class="val" style="color:var(--green)">${fmtPhp(a.goalsContrib)}</div></div>
+        ${topCat?`<div class="archive-stat"><div class="label">top category</div><div class="val" style="color:${getCatColor(topCat[0])}">${getCatLabel(topCat[0])}</div></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function resetAllData(){
   const res=await showModal({title:'reset all data',body:'this will erase everything — income, goals, investments, spends, streaks. cannot be undone.',buttons:[{label:'cancel',value:'cancel',cls:'btn-ghost'},{label:'yes, wipe it all',value:'ok',cls:'btn-red'}]});
   if(res.action!=='ok')return;
@@ -911,6 +1060,9 @@ async function resetAllData(){
 }
 function loadState(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;const saved=JSON.parse(raw);
   // Migrate old etfSlots/etfHistory format to new investments array
+  if(!saved.customVisionItems)saved.customVisionItems=[];
+  if(!saved.customCats)saved.customCats=[];
+  if(!saved.monthArchives)saved.monthArchives=[];
   if(saved.etfSlots||saved.etfHistory){
     if(!saved.investments)saved.investments=[];
     (saved.etfHistory||[]).forEach(h=>{
@@ -947,6 +1099,10 @@ let S = {
     {id:2, name:'Editing Services', expectedUSD:250, receivedUSD:0, guaranteed:true},
   ],
   feePlatform: 'paypal',
+  lastActiveMonth: null,   // for month-rollover detection
+  monthArchives: [],        // summary of each past month
+  customCats: [],           // user-defined spend categories
+  customVisionItems: [],    // user-added vision board items
 };
 
 let allFxRates={}, fxLive=false, fxTs=null;
@@ -1065,7 +1221,7 @@ const TICOS={dark:'🌙 dark',light:'☀️ light',pixel:'♡ pixel',forest:'�
 let theme=localStorage.getItem('myfinances_theme')||'dark';
 function applyTheme(){
   document.body.className='';if(theme!=='dark')document.body.classList.add(theme);
-  const btn=document.querySelector('.theme-btn');if(btn)btn.textContent=TICOS[theme];
+  const btn=$('theme-toggle-btn');if(btn)btn.textContent=TICOS[theme];
   ['al-goals','al-etf','al-disc'].forEach(id=>{const el=$(id);if(el)updateRangeTrack(el);});
 }
 function toggleTheme(){theme=THEMES[(THEMES.indexOf(theme)+1)%THEMES.length];localStorage.setItem('myfinances_theme',theme);applyTheme();}
@@ -1256,7 +1412,12 @@ function rotateQuote(){S.quoteIndex=(S.quoteIndex+1)%QUOTES.length;setText('quot
 function doCheckin(){
   const key=todayKey();if(S.lastCheckin===key){toast('already checked in today ✓');return;}
   const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);const yKey=yesterday.toISOString().split('T')[0];
-  if(S.lastCheckin===yKey)S.streak++;else S.streak=1;
+  const twoDaysAgo=new Date();twoDaysAgo.setDate(twoDaysAgo.getDate()-2);const tdKey=twoDaysAgo.toISOString().split('T')[0];
+  if(S.lastCheckin===yKey){S.streak++;}
+  else if(S.lastCheckin===tdKey){// 1-day grace: keep streak but warn
+    toast('⚠ you missed yesterday — streak preserved this once. build back from here.');
+  }
+  else{if(S.streak>3)toast('streak reset — was '+S.streak+' days. rebuild from here 💪');S.streak=1;}
   S.lastCheckin=key;$('checkin-btn').classList.add('done');$('checkin-btn').textContent='✓ checked in';
   setText('checkin-status',`🔥 ${S.streak} day streak`);setText('streak-badge',`🔥 ${S.streak} day streak`);
   rotateQuote();saveState();toast('checked in! streak: '+S.streak+' days 🔥');renderFreedomScore();
@@ -1315,8 +1476,44 @@ function renderSandbox(){
 }
 
 /* ═══ SPEND TRACKER ═══ */
-const CAT_COLORS={food:'var(--amber)',transport:'var(--blue)',shopping:'var(--red)',entertainment:'var(--purple)',subscriptions:'var(--green)',other:'var(--muted)'};
-const CAT_LABELS={food:'🍜 food',transport:'🚌 commute',shopping:'🛍 shopping',entertainment:'🎮 fun',subscriptions:'📱 subs',other:'📦 other'};
+const DEFAULT_CATS={food:{label:'🍜 food',color:'var(--amber)'},transport:{label:'🚌 commute',color:'var(--blue)'},shopping:{label:'🛍 shopping',color:'var(--red)'},entertainment:{label:'🎮 fun',color:'var(--purple)'},subscriptions:{label:'📱 subs',color:'var(--green)'},other:{label:'📦 other',color:'var(--muted)'}};
+const CUSTOM_CAT_COLORS=['var(--teal,#2dd4bf)','var(--pink,#f472b6)','var(--orange,#fb923c)','var(--lime,#a3e635)','var(--sky,#38bdf8)','var(--violet,#a78bfa)'];
+function getAllCats(){const m={...DEFAULT_CATS};(S.customCats||[]).forEach((c,i)=>{m[c.key]={label:(c.icon||'📌')+' '+c.name,color:CUSTOM_CAT_COLORS[i%CUSTOM_CAT_COLORS.length]};});return m;}
+function getCatColor(k){return(getAllCats()[k]||{color:'var(--muted)'}).color;}
+function getCatLabel(k){return(getAllCats()[k]||{label:k}).label;}
+// Legacy compat
+const CAT_COLORS=new Proxy({},{get:(_,k)=>getCatColor(k)});
+const CAT_LABELS=new Proxy({},{get:(_,k)=>getCatLabel(k)});
+
+function renderCategoryChips(){
+  const dEl=$('cat-chips-default');const cEl=$('cat-chips-custom');
+  if(dEl)dEl.innerHTML=Object.entries(DEFAULT_CATS).map(([k,v])=>`<span class="cat-chip" style="border-color:${v.color}22;color:${v.color}">${v.label}</span>`).join('');
+  if(cEl){
+    if(!(S.customCats||[]).length){cEl.innerHTML='<span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">no custom categories yet</span>';return;}
+    const allCats=getAllCats();
+    cEl.innerHTML=(S.customCats||[]).map(c=>{const cat=allCats[c.key];return`<span class="cat-chip" style="border-color:${cat.color}22;color:${cat.color}">${cat.label}<button class="cat-chip-del" onclick="delCustomCat('${c.key}')">✕</button></span>`;}).join('');
+  }
+  rebuildCatSelects();
+}
+function rebuildCatSelects(){
+  const all=getAllCats();
+  const opts=Object.entries(all).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  ['spend-cat-sel','sandbox-cat'].forEach(id=>{const el=$(id);if(el)el.innerHTML=opts;});
+}
+async function showAddCategoryModal(){
+  const res=await showModal({title:'add spend category',body:'create a custom category to track specific spending habits.',inputs:[{label:'category name',placeholder:'e.g. coffee, gym, health'},{label:'icon (emoji)',placeholder:'☕'}],buttons:[{label:'cancel',value:'cancel',cls:'btn-ghost'},{label:'add',value:'ok',cls:'btn-green'}]});
+  if(res.action!=='ok'||!res.input.trim())return;
+  const name=res.input.trim(),icon=(res.input2||'').trim().slice(0,2)||'📌';
+  const key='custom_'+name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  if(getAllCats()[key]){toast('⚠ category already exists');return;}
+  if(!S.customCats)S.customCats=[];
+  S.customCats.push({key,name,icon});
+  saveState();renderCategoryChips();toast('Category added: '+icon+' '+name);
+}
+function delCustomCat(key){
+  S.customCats=(S.customCats||[]).filter(c=>c.key!==key);
+  saveState();renderCategoryChips();toast('category removed');
+}
 function addSpend(){
   const amt=parseFloat($('spend-amt').value),label=$('spend-label').value.trim(),cat=$('spend-cat-sel').value;
   if(!amt||amt<=0){toast('⚠ enter an amount');return;}
@@ -1353,9 +1550,56 @@ function renderSpend(){
   const catTotals={};monthSpends.forEach(s=>{catTotals[s.cat]=(catTotals[s.cat]||0)+s.amt;});
   const bar=$('spend-cat-bar');if(bar){const total=monthTotal||1;bar.innerHTML=Object.entries(catTotals).map(([cat,amt])=>`<div style="flex:${amt/total};background:${CAT_COLORS[cat]||'var(--muted)'}"></div>`).join('');}
   const cbd=$('cat-breakdown');if(cbd){const sorted=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);cbd.innerHTML=sorted.length?sorted.map(([cat,amt])=>`<div style="display:flex;justify-content:space-between;padding:.18rem 0;border-bottom:1px solid var(--border)"><span>${CAT_LABELS[cat]||cat}</span><span style="color:${CAT_COLORS[cat]};font-weight:500">${fmtPhp(amt)}</span></div>`).join(''):'<span>no spends this month yet</span>';}
-  const sl=$('spend-list');if(sl){const recent=[...todaySpends].reverse().slice(0,8);sl.innerHTML=recent.length?recent.map(s=>`<div class="spend-row"><span class="spend-cat" style="background:${CAT_COLORS[s.cat]}22;color:${CAT_COLORS[s.cat]}">${CAT_LABELS[s.cat]||s.cat}</span><span class="spend-guilt">${s.label}</span><span style="font-family:var(--mono);font-size:.78rem;font-weight:500">${fmtPhp(s.amt)}</span><button onclick="delSpend(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.6rem;padding:.1rem .25rem">✕</button></div>`).join(''):'<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:.35rem 0">nothing logged today — clean slate ✓</div>';}
+  const sl=$('spend-list');if(sl){const recent=[...todaySpends].reverse().slice(0,8);sl.innerHTML=recent.length?recent.map(s=>`<div class="spend-row"><span class="spend-cat" style="background:${getCatColor(s.cat)}22;color:${getCatColor(s.cat)}">${getCatLabel(s.cat)}</span><span class="spend-guilt">${s.label}</span><span style="font-family:var(--mono);font-size:.78rem;font-weight:500">${fmtPhp(s.amt)}</span><button onclick="delSpend(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.6rem;padding:.1rem .25rem">✕</button></div>`).join(''):'<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:.35rem 0">nothing logged today — clean slate ✓</div>';}
+  renderTrendChart();renderCategoryChips();
 }
 function delSpend(id){S.spends=S.spends.filter(s=>s.id!==id);saveState();renderSpend();renderLogs();toast('entry removed');}
+
+/* ═══ SPEND TREND CHART ═══ */
+function renderTrendChart(){
+  const svg=$('trend-svg');if(!svg)return;
+  const W=Math.max(320,svg.parentElement?.offsetWidth||320);svg.setAttribute('width',W);
+  const H=72,BAR_W=Math.floor((W-24)/14)-3,PAD_L=4,PAD_R=4,PAD_T=8,PAD_B=18;
+  const chartW=W-PAD_L-PAD_R,barSlot=chartW/14;
+  // Build 14-day data
+  const days=[];const allCats=getAllCats();
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  const dayData=days.map(dk=>{const spends=S.spends.filter(s=>s.date===dk);const total=spends.reduce((s,x)=>s+x.amt,0);const cats={};spends.forEach(s=>cats[s.cat]=(cats[s.cat]||0)+s.amt);return{dk,total,cats};});
+  const maxVal=Math.max(...dayData.map(d=>d.total),1);
+  const dailyBudget=Math.max(1,Math.round(getDisp()*S.alloc.disc/100/30));
+  const avgSpend=dayData.reduce((s,d)=>s+d.total,0)/14;
+  const avgEl=$('trend-avg-label');if(avgEl)avgEl.textContent='avg '+fmtPhp(Math.round(avgSpend))+'/day';
+  // Draw SVG
+  let bars='';let labels='';let budgetLine='';
+  // Budget line
+  const budY=PAD_T+(H-PAD_T-PAD_B)*(1-Math.min(dailyBudget,maxVal)/maxVal);
+  budgetLine=`<line x1="${PAD_L}" y1="${budY.toFixed(1)}" x2="${W-PAD_R}" y2="${budY.toFixed(1)}" stroke="var(--red)" stroke-width="1" stroke-dasharray="3,3" opacity=".5"/>`;
+  dayData.forEach((d,i)=>{
+    const x=PAD_L+i*barSlot;const barH=d.total>0?(H-PAD_T-PAD_B)*(d.total/maxVal):1;
+    const y=H-PAD_B-barH;const isToday=d.dk===todayKey();
+    // Stacked segments by cat
+    let segY=H-PAD_B;
+    const catEntries=Object.entries(d.cats).sort((a,b)=>b[1]-a[1]);
+    catEntries.forEach(([cat,amt])=>{
+      const segH=(H-PAD_T-PAD_B)*(amt/maxVal);segY-=segH;
+      bars+=`<rect x="${(x+1).toFixed(1)}" y="${segY.toFixed(1)}" width="${BAR_W}" height="${segH.toFixed(1)}" fill="${getCatColor(cat)}" opacity="${isToday?'1':'.75'}" rx="2" class="trend-bar"><title>${d.dk}: ${getCatLabel(cat)} ${fmtPhp(amt)}</title></rect>`;
+    });
+    if(d.total===0){bars+=`<rect x="${(x+1).toFixed(1)}" y="${(H-PAD_B-1)}" width="${BAR_W}" height="1" fill="var(--border)" rx="1"/>`;}
+    // Day label every 7 days or today
+    if(i===0||i===6||i===13||isToday){
+      const dObj=new Date(d.dk);const lbl=isToday?'today':dObj.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+      labels+=`<text x="${(x+BAR_W/2).toFixed(1)}" y="${H-2}" text-anchor="middle" font-family="monospace" font-size="7" fill="var(--muted)">${lbl}</text>`;
+    }
+  });
+  // Legend
+  const legendEl=$('trend-legend');
+  if(legendEl){
+    const activeCats=new Set(S.spends.filter(s=>days.includes(s.date)).map(s=>s.cat));
+    legendEl.innerHTML=[...activeCats].map(cat=>`<span style="display:inline-flex;align-items:center;gap:.25rem"><span style="width:8px;height:8px;background:${getCatColor(cat)};border-radius:2px;display:inline-block"></span>${getCatLabel(cat)}</span>`).join('')
+     +`<span style="display:inline-flex;align-items:center;gap:.25rem;margin-left:.5rem"><span style="width:16px;height:1px;background:var(--red);display:inline-block"></span>budget</span>`;
+  }
+  svg.innerHTML=budgetLine+bars+labels;
+}
 
 /* ═══ INCOME STREAMS ═══ */
 function renderStreams(){
@@ -1432,12 +1676,28 @@ function renderComparison(){
 }
 
 /* ═══ VISION BOARD ═══ */
+function addVisionItem(){
+  const name=$('vision-custom-name').value.trim(),cost=parseFloat($('vision-custom-cost').value),icon=($('vision-custom-icon').value||'🎯').trim().slice(0,2)||'🎯';
+  if(!name){toast('⚠ enter item name');return;}if(!cost||cost<=0){toast('⚠ enter a cost');return;}
+  if(!S.customVisionItems)S.customVisionItems=[];
+  S.customVisionItems.push({id:Date.now(),name,cost,icon});
+  $('vision-custom-name').value='';$('vision-custom-cost').value='';$('vision-custom-icon').value='';
+  saveState();renderVisionBoard();toast(icon+' '+name+' added to vision board');
+}
+function delVisionItem(id){S.customVisionItems=(S.customVisionItems||[]).filter(i=>i.id!==id);saveState();renderVisionBoard();toast('removed from vision board');}
+
 function renderVisionBoard(){
   const nw=Math.max(0,getNetWorth()),disp=getDisp(),moSave=Math.round(disp*(S.alloc.goals+S.alloc.etf)/100);
   const vg=$('vision-grid');
-  if(vg)vg.innerHTML=VISION_ITEMS.map(item=>{const canAfford=nw>=item.cost,monthsAway=moSave>0?Math.ceil((item.cost-nw)/moSave):null;return`<div class="vision-item ${canAfford?'unlocked':'locked'}">${canAfford?'<span style="position:absolute;top:.4rem;right:.4rem;font-family:var(--mono);font-size:.6rem;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);border-radius:99px;padding:.05rem .3rem">✓ unlocked</span>':''}<span class="vision-item-icon">${item.icon}</span><div class="vision-item-name">${item.name}</div><div class="vision-item-cost">${fmtPhp(item.cost)}</div><div class="vision-item-months" style="color:${canAfford?'var(--green)':'var(--amber)'}">${canAfford?'you can do this now':(monthsAway?`~${monthsAway} months away`:'set allocation')}</div></div>`;}).join('');
+  const allItems=[...VISION_ITEMS,...(S.customVisionItems||[])].sort((a,b)=>a.cost-b.cost);
+  if(vg)vg.innerHTML=allItems.map(item=>{
+    const canAfford=nw>=item.cost,monthsAway=moSave>0?Math.ceil((item.cost-nw)/moSave):null;
+    const isCustom=!!(item.id);
+    const delBtn=isCustom?`<button onclick="delVisionItem(${item.id})" style="position:absolute;top:.35rem;left:.35rem;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.55rem;opacity:.6" title="remove">✕</button>`:'';
+    return`<div class="vision-item ${canAfford?'unlocked':'locked'}" style="position:relative">${delBtn}${canAfford?'<span style="position:absolute;top:.4rem;right:.4rem;font-family:var(--mono);font-size:.6rem;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);border-radius:99px;padding:.05rem .3rem">✓ unlocked</span>':''}<span class="vision-item-icon">${item.icon}</span><div class="vision-item-name">${item.name}</div><div class="vision-item-cost">${fmtPhp(item.cost)}</div><div class="vision-item-months" style="color:${canAfford?'var(--green)':'var(--amber)'}">${canAfford?'you can do this now':(monthsAway?`~${monthsAway} months away`:'set allocation')}</div></div>`;
+  }).join('');
   const mt=$('milestone-timeline');
-  if(mt)mt.innerHTML=MILESTONES.map(m=>{const reached=nw>=m.target;return`<div class="milestone-item ${reached?'reached':''}"><div class="milestone-dot"></div><div class="milestone-label">${m.label}</div><div class="milestone-val">${reached?'✓ reached':fmtPhp(Math.max(0,m.target-nw))+' to go'}</div></div>`;}).join('');
+  if(mt)mt.innerHTML=MILESTONES.map(m=>{const reached=nw>=m.target;const pct=Math.min(100,nw/m.target*100);return`<div class="milestone-item ${reached?'reached':''}"><div class="milestone-dot"></div><div style="flex:1"><div class="milestone-label">${m.label}</div>${!reached?`<div class="prog-bg" style="height:3px;margin:.3rem 0"><div class="prog-fill prog-blue" style="width:${pct.toFixed(1)}%"></div></div>`:''}  </div><div class="milestone-val">${reached?'✓ reached':fmtPhp(Math.max(0,m.target-nw))+' to go'}</div></div>`;}).join('');
 }
 
 /* ═══ GOALS — CONNECTED TO ALLOCATION ═══ */
@@ -1492,8 +1752,22 @@ function renderGoals(){
     const pct=Math.min(Math.round(g.paid/g.target*100),100),done=g.paid>=g.target,rem=Math.max(0,g.target-g.paid),isDebt=g.type==='debt';
     // Calculate this goal's share of the monthly budget (proportional to target)
     const goalShare=totalTarget>0?Math.round(goalsMoBudget*(g.target/totalTarget)):Math.round(goalsMoBudget/Math.max(1,S.goals.length));
-    const months=!done&&goalShare>0?Math.ceil(rem/goalShare):0;
-    const eta=done?'':(months>0?`at ${fmtPhp(goalShare)}/mo → ~${months} month${months!==1?'s':''}`:'set allocation above to see ETA');
+    // Smarter ETA: use actual contribution rate if ≥2 months of history
+    let eta='';
+    if(!done){
+      if(goalShare>0){
+        // Calculate actual average monthly contribution from history
+        const now=new Date();
+        const monthlyActual={};
+        g.history.filter(h=>!h.isRemove).forEach(h=>{const mk=(h.isoDate||h.date||'').slice(0,7);if(mk)monthlyActual[mk]=(monthlyActual[mk]||0)+Math.abs(h.amount||0);});
+        const actualMonths=Object.keys(monthlyActual).sort();
+        const avgActual=actualMonths.length>=2?Object.values(monthlyActual).reduce((s,v)=>s+v,0)/actualMonths.length:null;
+        const rate=avgActual||goalShare;
+        const months=Math.ceil(rem/rate);
+        const rateNote=avgActual?`actual avg ${fmtPhp(Math.round(avgActual))}/mo`:`budgeted ${fmtPhp(goalShare)}/mo`;
+        eta=`${rateNote} → ~${months} month${months!==1?'s':''} left`;
+      }else{eta='set allocation above to see ETA';}
+    }
 
     return`<div class="goal-card type-${g.type}">
       <div class="goal-card-head">
@@ -1663,6 +1937,7 @@ function renderLogs(){
   const allG=[];S.goals.forEach(g=>g.history.forEach((h,i)=>allG.push({...h,gName:g.name,gId:g.id,hi:i,type:g.type})));allG.sort((a,b)=>new Date(b.date)-new Date(a.date));
   const gList=$('list-goals');if(gList)gList.innerHTML=allG.length?allG.map(h=>`<li class="history-item"><div><div class="history-date">${h.date}</div><div class="history-label">${h.gName} <span class="pill ${h.type==='debt'?'pill-red':'pill-green'}" style="font-size:.52rem">${h.type}</span></div></div><div style="display:flex;align-items:center;gap:.55rem"><span class="history-amt" style="color:${h.isRemove||h.amount<0?'var(--red)':'var(--green)'}">${h.isRemove||h.amount<0?'−withdraw':'+added'} ${fmtPhp(Math.abs(h.amount))}</span><button class="history-del" onclick="delGoalEntry(${h.gId},${h.hi})">✕</button></div></li>`).join(''):'<li class="history-item" style="color:var(--muted);font-family:var(--mono)">no entries yet</li>';
   const eList=$('list-etf');if(eList)eList.innerHTML=S.investments.length?S.investments.map(inv=>`<li class="history-item"><div><div class="history-date">${inv.date}</div><div class="history-label">${inv.ticker} ${inv.manual?'— manual entry':inv.shares!=null?'· '+inv.shares.toFixed(4)+' sh @ $'+inv.priceUSD.toFixed(2):''}</div></div><div style="display:flex;align-items:center;gap:.55rem"><span class="history-amt c-blue">${fmtPhp(inv.totalPhp)}</span><button class="history-del" onclick="delInvestment(${inv.id})">✕</button></div></li>`).join(''):'<li class="history-item" style="color:var(--muted);font-family:var(--mono)">no investments yet</li>';
+  renderArchive();
   const iList=$('list-income');if(iList)iList.innerHTML=S.incomeHistory.length?S.incomeHistory.map(h=>`<li class="history-item"><div><div class="history-date">${h.date}</div><div class="history-label">${h.source||h.note||'Income updated'}</div></div><span class="history-amt"><span style="color:var(--muted)">${fmtPhp(h.prev)}</span> → <span class="c-green">${fmtPhp(h.next)}</span></span></li>`).join(''):'<li class="history-item" style="color:var(--muted);font-family:var(--mono)">no changes yet</li>';
   const spList=$('list-spend-log');if(spList){const sorted=[...S.spends].sort((a,b)=>b.ts-a.ts).slice(0,60);spList.innerHTML=sorted.length?sorted.map(s=>`<li class="history-item"><div><div class="history-date">${s.date}</div><div class="history-label">${s.label} <span class="spend-cat" style="background:${CAT_COLORS[s.cat]}22;color:${CAT_COLORS[s.cat]}">${CAT_LABELS[s.cat]||s.cat}</span></div></div><div style="display:flex;align-items:center;gap:.5rem"><span class="history-amt c-amber">${fmtPhp(s.amt)}</span><button class="history-del" onclick="delSpend(${s.id})">✕</button></div></li>`).join(''):'<li class="history-item" style="color:var(--muted);font-family:var(--mono)">no spends logged yet</li>';}
 }
@@ -1682,6 +1957,7 @@ function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('sho
 
 /* ═══ REFRESH ALL ═══ */
 function refreshAll(){
+  checkMonthRollover();
   renderHUD();updateAllocSliders();
   renderGoals();renderInvestments();renderNetWorth();renderComparison();renderLogs();
   renderFreedomScore();renderSpend();renderStreams();renderVisionBoard();renderSandbox();
