@@ -1758,18 +1758,26 @@ let _etfPriceTimer=null;
 const MARKET_STATE_LABEL={REGULAR:'🟢 market open',PRE:'🌅 pre-market',POST:'🌆 after-hours',CLOSED:'⚫ market closed'};
 
 async function fetchOneTicker(ticker){
-  // v8/finance/chart is more permissive than v7/finance/quote (no crumb needed)
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
-  const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  const d=await r.json();
+  const yahooUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  let resp,viaProxy=false;
+  // try direct first; if blocked fall back to CORS proxy
+  try{
+    resp=await fetch(yahooUrl,{signal:AbortSignal.timeout(6000)});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+  }catch(e){
+    viaProxy=true;
+    const proxy=`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+    resp=await fetch(proxy,{signal:AbortSignal.timeout(9000)});
+    if(!resp.ok)throw new Error('proxy HTTP '+resp.status);
+  }
+  const d=await resp.json();
   const meta=d?.chart?.result?.[0]?.meta;
   if(!meta?.regularMarketPrice)throw new Error('no price in response');
   const cur=meta.regularMarketPrice;
   const prev=meta.chartPreviousClose||meta.previousClose||null;
   const changeUSD=prev?cur-prev:null;
   const changePct=prev?(cur-prev)/prev*100:null;
-  return{price:cur,changeUSD,changePct,marketState:meta.marketState??'CLOSED'};
+  return{price:cur,changeUSD,changePct,marketState:meta.marketState??'CLOSED',viaProxy};
 }
 
 async function fetchETFPrices(showToast=false){
@@ -1779,20 +1787,20 @@ async function fetchETFPrices(showToast=false){
   if(el){el.textContent='⟳ fetching prices…';el.style.color='var(--muted)';}
   try{
     const results=await Promise.allSettled(slots.map(s=>fetchOneTicker(s.ticker)));
-    let updated=0,marketState='CLOSED';
+    let updated=0,marketState='CLOSED',usedProxy=false;
     results.forEach((res,i)=>{
       if(res.status!=='fulfilled')return;
-      const slot=slots[i],{price,changeUSD,changePct,marketState:ms}=res.value;
+      const slot=slots[i],{price,changeUSD,changePct,marketState:ms,viaProxy}=res.value;
       slot.currentPriceUSD=price;slot.lastPriceUpdate=Date.now();
       slot.priceIsLive=true;slot.dayChangeUSD=changeUSD;
       slot.dayChangePct=changePct;slot.marketState=ms;
-      marketState=ms;updated++;
+      marketState=ms;updated++;if(viaProxy)usedProxy=true;
     });
     const failed=results.filter(r=>r.status==='rejected').length;
     const stateLabel=MARKET_STATE_LABEL[marketState]??marketState;
     const now=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
     if(el){
-      el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ~15min delayed during trading hours</span>${failed?` <span style="color:var(--amber)">· ${failed} ticker${failed>1?'s':''} failed</span>`:''}`;
+      el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ~15min delayed${usedProxy?' · via proxy':''}</span>${failed?` <span style="color:var(--amber)">· ${failed} ticker${failed>1?'s':''} failed</span>`:''}`;
       el.style.color='var(--muted2)';
     }
     if(updated>0){
