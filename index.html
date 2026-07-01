@@ -1755,43 +1755,54 @@ function switchLogTab(id,btn){
 
 /* ═══ ETF LIVE PRICES — YAHOO FINANCE ═══ */
 let _etfPriceTimer=null;
-const YF_FIELDS='regularMarketPrice,regularMarketChange,regularMarketChangePercent,marketState';
 const MARKET_STATE_LABEL={REGULAR:'🟢 market open',PRE:'🌅 pre-market',POST:'🌆 after-hours',CLOSED:'⚫ market closed'};
 
+async function fetchOneTicker(ticker){
+  // v8/finance/chart is more permissive than v7/finance/quote (no crumb needed)
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  const meta=d?.chart?.result?.[0]?.meta;
+  if(!meta?.regularMarketPrice)throw new Error('no price in response');
+  const cur=meta.regularMarketPrice;
+  const prev=meta.chartPreviousClose||meta.previousClose||null;
+  const changeUSD=prev?cur-prev:null;
+  const changePct=prev?(cur-prev)/prev*100:null;
+  return{price:cur,changeUSD,changePct,marketState:meta.marketState??'CLOSED'};
+}
+
 async function fetchETFPrices(showToast=false){
-  const tickers=S.etfSlots.map(s=>s.ticker).filter(Boolean);
-  if(!tickers.length){setText('etf-price-status','add ETF slots to enable live prices');return;}
+  const slots=S.etfSlots.filter(s=>s.ticker);
+  if(!slots.length){setText('etf-price-status','add ETF slots to enable live prices');return;}
   const el=$('etf-price-status');
   if(el){el.textContent='⟳ fetching prices…';el.style.color='var(--muted)';}
   try{
-    const url=`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${tickers.join(',')}&fields=${YF_FIELDS}`;
-    const resp=await fetch(url,{signal:AbortSignal.timeout(9000)});
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
-    const quotes=data?.quoteResponse?.result;
-    if(!quotes?.length)throw new Error('empty response');
+    const results=await Promise.allSettled(slots.map(s=>fetchOneTicker(s.ticker)));
     let updated=0,marketState='CLOSED';
-    quotes.forEach(q=>{
-      const slot=S.etfSlots.find(s=>s.ticker.toUpperCase()===q.symbol?.toUpperCase());
-      if(!slot||!q.regularMarketPrice)return;
-      slot.currentPriceUSD=q.regularMarketPrice;
-      slot.lastPriceUpdate=Date.now();
-      slot.priceIsLive=true;
-      slot.dayChangeUSD=q.regularMarketChange??null;
-      slot.dayChangePct=q.regularMarketChangePercent??null;
-      slot.marketState=q.marketState??null;
-      if(q.marketState)marketState=q.marketState;
-      updated++;
+    results.forEach((res,i)=>{
+      if(res.status!=='fulfilled')return;
+      const slot=slots[i],{price,changeUSD,changePct,marketState:ms}=res.value;
+      slot.currentPriceUSD=price;slot.lastPriceUpdate=Date.now();
+      slot.priceIsLive=true;slot.dayChangeUSD=changeUSD;
+      slot.dayChangePct=changePct;slot.marketState=ms;
+      marketState=ms;updated++;
     });
+    const failed=results.filter(r=>r.status==='rejected').length;
     const stateLabel=MARKET_STATE_LABEL[marketState]??marketState;
     const now=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-    if(el){el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ~15min delayed during trading hours</span>`;el.style.color='var(--muted2)';}
+    if(el){
+      el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ~15min delayed during trading hours</span>${failed?` <span style="color:var(--amber)">· ${failed} ticker${failed>1?'s':''} failed</span>`:''}`;
+      el.style.color='var(--muted2)';
+    }
     if(updated>0){
       renderETF();renderNetWorth();renderNWContext();renderFreedomScore();renderVisionBoard();saveState();
       if(showToast)toast(`📈 ${updated} price${updated>1?'s':''} updated`);
+    }else if(!updated){
+      if(el){el.innerHTML='⚠ couldn\'t reach Yahoo Finance — try the 🔄 refresh button';el.style.color='var(--amber)';}
     }
   }catch(e){
-    if(el){el.innerHTML='⚠ fetch failed — make sure you\'re on <strong>http://</strong> not file://';el.style.color='var(--amber)';}
+    if(el){el.innerHTML='⚠ price fetch failed — try refreshing';el.style.color='var(--amber)';}
     console.warn('ETF price fetch:',e);
   }
 }
