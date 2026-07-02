@@ -399,6 +399,44 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 .nw-next strong{color:var(--amber);}
 @media(max-width:640px){.nw-ctx-kpis{grid-template-columns:1fr 1fr;}.nw-ctx-kpis .nw-ctx-kpi:last-child{grid-column:span 2;}}
 
+/* ── SETTINGS + ADVISOR PANELS ── */
+.warm-overlay{position:fixed;inset:0;background:rgba(255,140,40,.07);pointer-events:none;z-index:9997;display:none;mix-blend-mode:multiply;}
+body.warm .warm-overlay{display:block;}
+body.font-small{font-size:13px;}
+body.font-large{font-size:17px;}
+body.reduce-motion *{animation:none!important;transition:none!important;}
+
+.advisor-fab{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--green);color:#000;border:none;border-radius:99px;padding:.55rem 1rem;display:flex;align-items:center;gap:.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,200,100,.3);transition:transform .2s,box-shadow .2s;}
+.advisor-fab:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,200,100,.4);}
+
+.side-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
+.side-overlay.open{opacity:1;pointer-events:all;}
+.side-panel{position:absolute;right:0;top:0;bottom:0;width:min(420px,95vw);background:var(--surface);border-left:1px solid var(--border);padding:1.5rem;overflow-y:auto;transform:translateX(100%);transition:transform .3s cubic-bezier(0.34,1.2,0.64,1);display:flex;flex-direction:column;gap:0;}
+.side-overlay.open .side-panel{transform:translateX(0);}
+
+.setting-row{border-bottom:1px solid var(--border);padding:1rem 0;}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-family:var(--mono);font-size:.75rem;color:var(--text);margin-bottom:.18rem;}
+.setting-sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);}
+
+.seg-ctrl{display:flex;gap:.3rem;}
+.seg-btn{flex:1;padding:.38rem 0;font-family:var(--mono);font-size:.62rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;}
+.seg-btn.active{background:var(--green-dim);border-color:var(--green-border);color:var(--green);}
+
+.toggle-btn{width:42px;height:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:99px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle-btn.on{background:var(--green);border-color:var(--green);}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle-btn.on .toggle-knob{left:21px;}
+
+/* advisor messages */
+.adv-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:.85rem 1rem;font-family:var(--mono);font-size:.73rem;color:var(--muted2);line-height:1.85;margin-bottom:.75rem;}
+.adv-bubble.user{background:var(--green-dim);border-color:var(--green-border);border-radius:12px 12px 2px 12px;color:var(--text);text-align:right;}
+.adv-bubble.urgent{border-color:var(--amber);background:rgba(255,180,50,.06);}
+.typing-dot{display:inline-block;width:6px;height:6px;background:var(--muted);border-radius:50%;margin:0 2px;animation:typingBounce .9s infinite ease-in-out;}
+.typing-dot:nth-child(2){animation-delay:.15s;}
+.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+
 /* ── ETF LIVE PRICES ── */
 .live-badge{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);border-radius:99px;font-size:.48rem;padding:.04rem .28rem;font-family:var(--mono);letter-spacing:.04em;vertical-align:middle;margin-left:.25rem;}
 .etf-price-status-bar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.85rem;padding:.5rem .75rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);}
@@ -462,6 +500,7 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
       <div><span class="dot" id="fx-dot" style="display:inline-block;vertical-align:middle;margin-right:.35rem"></span><span id="fx-status">fx: —</span></div>
     </div>
     <button class="theme-btn" onclick="toggleTheme()">🌙 dark</button>
+    <button class="theme-btn" onclick="openSettings()" title="display settings">⚙ settings</button>
     <button class="theme-btn" onclick="confirmClearData()" title="erase everything saved on this device">↺ reset</button>
   </div>
 </header>
@@ -927,6 +966,95 @@ input[type=range].disc-range::-moz-range-thumb{background:var(--muted2)}
 
 </div>
 
+<!-- warm blue-light overlay -->
+<div id="warm-overlay" class="warm-overlay"></div>
+
+<!-- floating advisor button -->
+<button class="advisor-fab" id="advisor-fab" onclick="openAdvisor('general')">
+  <span style="font-size:1.2rem">🧠</span>
+  <span style="font-family:var(--mono);font-size:.6rem;letter-spacing:.04em">advisor</span>
+</button>
+
+<!-- settings panel -->
+<div class="side-overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="side-panel" id="settings-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <span style="font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)">display settings</span>
+      <button onclick="closeSettings()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:.2rem">✕</button>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">font size</div>
+      <div class="setting-sub">adjust text to your comfort</div>
+      <div class="seg-ctrl" style="margin-top:.55rem">
+        <button class="seg-btn" data-size="small"  onclick="setPref('fontSize','small')">small</button>
+        <button class="seg-btn active" data-size="normal" onclick="setPref('fontSize','normal')">normal</button>
+        <button class="seg-btn" data-size="large"  onclick="setPref('fontSize','large')">large</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="setting-label">warm mode</div>
+          <div class="setting-sub">reduces blue light — easier on eyes at night</div>
+        </div>
+        <button class="toggle-btn" id="warm-toggle" onclick="togglePref('warmMode')">
+          <div class="toggle-knob"></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="setting-label">reduce motion</div>
+          <div class="setting-sub">disables tab transitions and animations</div>
+        </div>
+        <button class="toggle-btn" id="motion-toggle" onclick="togglePref('reduceMotion')">
+          <div class="toggle-knob"></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">finnhub api key</div>
+      <div class="setting-sub">for live ETF prices — get a free key at finnhub.io</div>
+      <div style="display:flex;gap:.5rem;margin-top:.55rem">
+        <input type="password" id="fh-key-inp" placeholder="paste your key here" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;">
+        <button class="btn btn-sm btn-green" onclick="saveFinnhubKey()">save</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:.4rem" id="fh-key-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- advisor panel -->
+<div class="side-overlay" id="advisor-overlay" onclick="if(event.target===this)closeAdvisor()">
+  <div class="side-panel" id="advisor-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+      <div>
+        <div style="font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)">financial companion</div>
+        <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.15rem">powered by claude · knows your full picture</div>
+      </div>
+      <button onclick="closeAdvisor()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:.2rem">✕</button>
+    </div>
+
+    <div id="advisor-messages" style="flex:1;overflow-y:auto;padding:.5rem 0;min-height:200px;max-height:55vh"></div>
+
+    <div id="advisor-typing" style="display:none;font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:.5rem 0">
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:.75rem;margin-top:.5rem;display:flex;gap:.5rem">
+      <input type="text" id="advisor-input" placeholder="ask anything about your finances…" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.5rem .75rem;font-family:var(--mono);font-size:.72rem;" onkeydown="if(event.key==='Enter')sendAdvisorMessage()">
+      <button class="btn btn-sm btn-green" onclick="sendAdvisorMessage()">→</button>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted);text-align:center;margin-top:.5rem">not financial advice — just a smart friend with your numbers</div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -953,6 +1081,8 @@ let S = {
   spends: [],
   impulseSandbox: [],
   streams: [],
+  finnhubKey: 'd92ek6hr01qraam0kgogd92ek6hr01qraam0kgp0',
+  prefs: {fontSize: 'normal', warmMode: false, reduceMotion: false},
   feePlatform: 'paypal',
   goalContributionsThisMonth: 0,
 };
@@ -1433,7 +1563,10 @@ function addSpend(){
 }
 function commitSpend(amt,label,cat){
   S.spends.push({id:Date.now(),amt,label,cat,date:todayKey(),ts:Date.now()});
-  $('spend-amt').value='';$('spend-label').value='';renderSpend();renderLogs();toast('logged: '+fmtPhp(amt));pendingSpendData=null;
+  $('spend-amt').value='';$('spend-label').value='';renderSpend();renderLogs();
+  toast('logged: '+fmtPhp(amt));pendingSpendData=null;
+  // surface advisor for meaningful spends — scales tone with amount
+  if(amt>=500)maybeAdvisSpend(amt,label,cat);
 }
 function showImpulsePause(amt){
   const overlay=$('impulse-overlay'),confirm=$('impulse-confirm'),sandboxBtn=$('impulse-sandbox-it');
@@ -1753,14 +1886,191 @@ function switchLogTab(id,btn){
   $(id).classList.add('active');if(btn)btn.classList.add('active');
 }
 
-/* ═══ ETF LIVE PRICES — YAHOO FINANCE ═══ */
+/* ═══ SETTINGS / PREFS ═══ */
+function applyPrefs(){
+  const p=S.prefs||{};
+  document.body.classList.remove('font-small','font-large','warm','reduce-motion');
+  if(p.fontSize==='small')document.body.classList.add('font-small');
+  if(p.fontSize==='large')document.body.classList.add('font-large');
+  if(p.warmMode)document.body.classList.add('warm');
+  if(p.reduceMotion)document.body.classList.add('reduce-motion');
+  // sync seg buttons
+  document.querySelectorAll('.seg-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.size===(p.fontSize||'normal'));
+  });
+  const wt=$('warm-toggle');if(wt)wt.classList.toggle('on',!!p.warmMode);
+  const mt=$('motion-toggle');if(mt)mt.classList.toggle('on',!!p.reduceMotion);
+}
+function setPref(key,val){
+  if(!S.prefs)S.prefs={};S.prefs[key]=val;applyPrefs();saveState();
+}
+function togglePref(key){
+  if(!S.prefs)S.prefs={};S.prefs[key]=!S.prefs[key];applyPrefs();saveState();
+}
+function openSettings(){
+  const inp=$('fh-key-inp');if(inp)inp.value=S.finnhubKey||'';
+  const st=$('fh-key-status');if(st)st.textContent=S.finnhubKey?'✓ key saved':'no key — using Yahoo Finance fallback';
+  $('settings-overlay').classList.add('open');
+}
+function closeSettings(){$('settings-overlay').classList.remove('open');}
+function saveFinnhubKey(){
+  const val=($('fh-key-inp').value||'').trim();
+  S.finnhubKey=val;saveState();
+  const st=$('fh-key-status');
+  if(st)st.textContent=val?'✓ key saved — prices will use Finnhub':'key cleared — falling back to Yahoo Finance';
+  if(val)fetchETFPrices(true);
+}
+
+/* ═══ AI FINANCIAL COMPANION ═══ */
+let _advisorHistory=[];
+
+function buildAdvisorContext(){
+  const disp=getDisp(),nw=getNetWorth();
+  const goalsStr=S.goals.length
+    ?S.goals.map(g=>`${g.name} (${g.type}): ₱${g.paid.toLocaleString()} of ₱${g.target.toLocaleString()} (${Math.round(g.paid/g.target*100)}%)`).join(', ')
+    :'no goals set yet';
+  const recentSpends=S.spends.slice(0,8).map(s=>`₱${s.amt} on ${s.label} (${s.cat})`).join(', ')||'no recent spends logged';
+  const etfValue=S.etfSlots.reduce((s,sl)=>{
+    if(!sl.currentPriceUSD||!sl.shares)return s;
+    return s+sl.shares*sl.currentPriceUSD*(allFxRates['USD']||56.5);
+  },0);
+  return `THEIR FINANCIAL SNAPSHOT (live data):
+- Monthly income: ₱${S.income.toLocaleString()} (guaranteed: ₱${S.guaranteedIncome.toLocaleString()})
+- Monthly fixed expenses: ₱${totalFixed().toLocaleString()}
+- Disposable income after expenses: ₱${disp.toLocaleString()}
+- Net worth: ₱${nw.toLocaleString()}
+- ETF portfolio value: ${etfValue>0?'₱'+Math.round(etfValue).toLocaleString():'no positions yet'}
+- Goals: ${goalsStr}
+- Recent spends this month: ${recentSpends}
+- Freedom score: ${$('freedom-score')?.textContent||'?'}/100`;
+}
+
+function buildAdvisorPrompt(userMessage, spendContext=null){
+  const ctx=buildAdvisorContext();
+  const toneGuide=spendContext?`
+ABOUT THIS SPECIFIC SITUATION:
+The person just logged (or is about to log) a ₱${spendContext.amt} spend on "${spendContext.label}" (${spendContext.cat} category).
+Their disposable income this month is ₱${getDisp().toLocaleString()}.
+This spend is ${Math.round(spendContext.amt/getDisp()*100)}% of their monthly disposable.
+
+TONE CALIBRATION FOR THIS AMOUNT:
+${spendContext.amt<500?'Keep it light and brief — 1-2 casual sentences. This is small. A gentle reframe at most, no alarm.':
+  spendContext.amt<2000?'Thoughtful but relaxed — 2-3 sentences. Give real context: percentage of their disposable, what they could do instead. End with a soft question.':
+  spendContext.amt<10000?'Genuinely concerned — 3-4 sentences. Show real goal impact with specific numbers. Warm but honest about the trade-off. Make them feel it without lecturing.':
+  'Have a real conversation — this is significant. Walk them through the full picture: what this delays, what it costs, what it represents as a % of net worth. Be direct and caring. No sugarcoating, but no coldness either.'}
+`:'';
+
+  return `You are a warm, perceptive financial companion for a young Filipino professional. Think of yourself as a trusted, financially savvy friend — not a bank advisor, not a robot. You know their full financial picture and genuinely care.
+
+${ctx}
+${toneGuide}
+PERSONALITY RULES (strictly follow these):
+- Write like you're talking to a friend, not filing a report. No bullet points. No headers. Flowing sentences.
+- Filipino-English is natural here. "Pare", "bes", "kaya" can appear but only if it feels completely natural, not forced.
+- Reference their ACTUAL numbers. Vague advice is worthless. Be specific.
+- Say the important thing once, memorably. Never repeat yourself or moralize twice.
+- For large amounts: make the stakes concrete and human, not abstract percentages.
+- Never be preachy. Never shame. But also never sugarcoat something that genuinely matters.
+- If their finances are actually in good shape, acknowledge it genuinely before anything else.
+
+CONVERSATION HISTORY:
+${_advisorHistory.slice(-6).map(m=>`${m.role==='user'?'Them':'You'}: ${m.content}`).join('\n')}
+
+${userMessage?`Their message: "${userMessage}"`:spendContext?'Give your honest take on this spend given everything you know about their situation.':'Give a brief, honest assessment of how their finances are looking right now. Be specific. Keep it to 3-5 sentences.'}`;
+}
+
+async function callAdvisorAPI(prompt){
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!resp.ok)throw new Error('API error '+resp.status);
+  const data=await resp.json();
+  return data.content?.find(b=>b.type==='text')?.text||'';
+}
+
+function appendAdvisorMessage(text,role='assistant',urgent=false){
+  const el=$('advisor-messages');if(!el)return;
+  const div=document.createElement('div');
+  div.className='adv-bubble'+(role==='user'?' user':'')+(urgent?' urgent':'');
+  div.textContent=text;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+}
+
+async function openAdvisor(mode='general',spendContext=null){
+  $('advisor-overlay').classList.add('open');
+  const msgs=$('advisor-messages');
+  if(msgs&&msgs.children.length===0){
+    // first open — generate a greeting assessment
+    $('advisor-typing').style.display='block';
+    try{
+      const prompt=buildAdvisorPrompt(null,spendContext);
+      const reply=await callAdvisorAPI(prompt);
+      $('advisor-typing').style.display='none';
+      appendAdvisorMessage(reply,'assistant',spendContext&&spendContext.amt>5000);
+      _advisorHistory.push({role:'assistant',content:reply});
+    }catch(e){
+      $('advisor-typing').style.display='none';
+      appendAdvisorMessage("couldn't reach the API right now — check your connection and try again.",'assistant');
+    }
+  }
+}
+function closeAdvisor(){$('advisor-overlay').classList.remove('open');}
+
+async function sendAdvisorMessage(){
+  const inp=$('advisor-input');if(!inp)return;
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  appendAdvisorMessage(msg,'user');
+  _advisorHistory.push({role:'user',content:msg});
+  $('advisor-typing').style.display='block';
+  try{
+    const prompt=buildAdvisorPrompt(msg);
+    const reply=await callAdvisorAPI(prompt);
+    $('advisor-typing').style.display='none';
+    appendAdvisorMessage(reply,'assistant');
+    _advisorHistory.push({role:'assistant',content:reply});
+  }catch(e){
+    $('advisor-typing').style.display='none';
+    appendAdvisorMessage("something went wrong — try again in a moment.",'assistant');
+  }
+}
+
+// called after a spend is logged to optionally show inline advisor card
+async function maybeAdvisSpend(amt,label,cat){
+  // only surface advisor for meaningful amounts — don't nag on every ₱50 spend
+  if(amt<500)return;
+  const msgs=$('advisor-messages');
+  if(msgs)msgs.innerHTML=''; // fresh context for this spend
+  _advisorHistory=[];
+  await openAdvisor('spend',{amt,label,cat});
+}
+
+/* ═══ ETF LIVE PRICES — YAHOO FINANCE + FINNHUB ═══ */
 let _etfPriceTimer=null;
 const MARKET_STATE_LABEL={REGULAR:'🟢 market open',PRE:'🌅 pre-market',POST:'🌆 after-hours',CLOSED:'⚫ market closed'};
 
 async function fetchOneTicker(ticker){
+  // prefer Finnhub when key is available — reliable, no CORS issues
+  if(S.finnhubKey){
+    const url=`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${S.finnhubKey}`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)throw new Error('Finnhub HTTP '+r.status);
+    const d=await r.json();
+    if(!d.c||d.c===0)throw new Error('no price from Finnhub');
+    const changeUSD=d.d??null;
+    const changePct=d.dp??null;
+    return{price:d.c,changeUSD,changePct,marketState:'REGULAR',viaProxy:false,source:'finnhub'};
+  }
+  // fall back to Yahoo Finance v8 (direct → corsproxy.io)
   const yahooUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
   let resp,viaProxy=false;
-  // try direct first; if blocked fall back to CORS proxy
   try{
     resp=await fetch(yahooUrl,{signal:AbortSignal.timeout(6000)});
     if(!resp.ok)throw new Error('HTTP '+resp.status);
@@ -1775,9 +2085,7 @@ async function fetchOneTicker(ticker){
   if(!meta?.regularMarketPrice)throw new Error('no price in response');
   const cur=meta.regularMarketPrice;
   const prev=meta.chartPreviousClose||meta.previousClose||null;
-  const changeUSD=prev?cur-prev:null;
-  const changePct=prev?(cur-prev)/prev*100:null;
-  return{price:cur,changeUSD,changePct,marketState:meta.marketState??'CLOSED',viaProxy};
+  return{price:cur,changeUSD:prev?cur-prev:null,changePct:prev?(cur-prev)/prev*100:null,marketState:meta.marketState??'CLOSED',viaProxy,source:'yahoo'};
 }
 
 async function fetchETFPrices(showToast=false){
@@ -1796,11 +2104,11 @@ async function fetchETFPrices(showToast=false){
       slot.dayChangePct=changePct;slot.marketState=ms;
       marketState=ms;updated++;if(viaProxy)usedProxy=true;
     });
-    const failed=results.filter(r=>r.status==='rejected').length;
-    const stateLabel=MARKET_STATE_LABEL[marketState]??marketState;
+    const usedFinnhub=results.some(r=>r.status==='fulfilled'&&r.value.source==='finnhub');
+    const stateLabel=usedFinnhub?'📡 finnhub live':(MARKET_STATE_LABEL[marketState]??marketState);
     const now=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
     if(el){
-      el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ~15min delayed${usedProxy?' · via proxy':''}</span>${failed?` <span style="color:var(--amber)">· ${failed} ticker${failed>1?'s':''} failed</span>`:''}`;
+      el.innerHTML=`${stateLabel} · updated ${now} <span style="color:var(--muted);font-size:.58rem">· ${usedFinnhub?'real-time data':'~15min delayed'+( usedProxy?' · via proxy':'')}</span>${failed?` <span style="color:var(--amber)">· ${failed} ticker${failed>1?'s':''} failed</span>`:''}`;
       el.style.color='var(--muted2)';
     }
     if(updated>0){
@@ -1877,6 +2185,7 @@ function refreshAll(){
 function init(){
   loadState();
   applyTheme();
+  applyPrefs();
   // restore last active tab
   if(S.activeTab){
     const btn=document.querySelector(`.main-tab-btn[data-tab="${S.activeTab}"]`);
