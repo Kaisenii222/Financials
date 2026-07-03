@@ -406,7 +406,7 @@ body.font-small{font-size:13px;}
 body.font-large{font-size:17px;}
 body.reduce-motion *{animation:none!important;transition:none!important;}
 
-.advisor-fab{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--green);color:#000;border:none;border-radius:99px;padding:.55rem 1rem;display:flex;align-items:center;gap:.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,200,100,.3);transition:transform .2s,box-shadow .2s;}
+.advisor-fab{position:fixed;bottom:5.5rem;right:2rem;z-index:500;background:var(--green);color:#000;border:none;border-radius:99px;padding:.55rem 1rem;display:flex;align-items:center;gap:.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,200,100,.3);transition:transform .2s,box-shadow .2s;}
 .advisor-fab:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,200,100,.4);}
 
 .side-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
@@ -1037,7 +1037,10 @@ body.reduce-motion *{animation:none!important;transition:none!important;}
         <div style="font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)">financial companion</div>
         <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.15rem">powered by claude · knows your full picture</div>
       </div>
-      <button onclick="closeAdvisor()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:.2rem">✕</button>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        <button onclick="clearAdvisorChat()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:.58rem;padding:.2rem .4rem;border-radius:var(--radius-sm);border:1px solid var(--border)">new chat</button>
+        <button onclick="closeAdvisor()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:.2rem">✕</button>
+      </div>
     </div>
 
     <div id="advisor-messages" style="flex:1;overflow-y:auto;padding:.5rem 0;min-height:200px;max-height:55vh"></div>
@@ -1945,48 +1948,33 @@ function buildAdvisorContext(){
 - Freedom score: ${$('freedom-score')?.textContent||'?'}/100`;
 }
 
-function buildAdvisorPrompt(userMessage, spendContext=null){
-  const ctx=buildAdvisorContext();
-  const toneGuide=spendContext?`
-ABOUT THIS SPECIFIC SITUATION:
-The person just logged (or is about to log) a ₱${spendContext.amt} spend on "${spendContext.label}" (${spendContext.cat} category).
-Their disposable income this month is ₱${getDisp().toLocaleString()}.
-This spend is ${Math.round(spendContext.amt/getDisp()*100)}% of their monthly disposable.
 
-TONE CALIBRATION FOR THIS AMOUNT:
-${spendContext.amt<500?'Keep it light and brief — 1-2 casual sentences. This is small. A gentle reframe at most, no alarm.':
-  spendContext.amt<2000?'Thoughtful but relaxed — 2-3 sentences. Give real context: percentage of their disposable, what they could do instead. End with a soft question.':
-  spendContext.amt<10000?'Genuinely concerned — 3-4 sentences. Show real goal impact with specific numbers. Warm but honest about the trade-off. Make them feel it without lecturing.':
-  'Have a real conversation — this is significant. Walk them through the full picture: what this delays, what it costs, what it represents as a % of net worth. Be direct and caring. No sugarcoating, but no coldness either.'}
-`:'';
-
+function buildAdvisorSystem(){
   return `You are a warm, perceptive financial companion for a young Filipino professional. Think of yourself as a trusted, financially savvy friend — not a bank advisor, not a robot. You know their full financial picture and genuinely care.
 
-${ctx}
-${toneGuide}
-PERSONALITY RULES (strictly follow these):
-- Write like you're talking to a friend, not filing a report. No bullet points. No headers. Flowing sentences.
-- Filipino-English is natural here. "Pare", "bes", "kaya" can appear but only if it feels completely natural, not forced.
+PERSONALITY RULES (follow strictly):
+- Write like you're talking to a friend. No bullet points. No headers. Flowing sentences.
+- Filipino-English is natural here. "Pare", "bes", "kaya" can appear but only if completely natural.
 - Reference their ACTUAL numbers. Vague advice is worthless. Be specific.
 - Say the important thing once, memorably. Never repeat yourself or moralize twice.
-- For large amounts: make the stakes concrete and human, not abstract percentages.
-- Never be preachy. Never shame. But also never sugarcoat something that genuinely matters.
-- If their finances are actually in good shape, acknowledge it genuinely before anything else.
-
-CONVERSATION HISTORY:
-${_advisorHistory.slice(-6).map(m=>`${m.role==='user'?'Them':'You'}: ${m.content}`).join('\n')}
-
-${userMessage?`Their message: "${userMessage}"`:spendContext?'Give your honest take on this spend given everything you know about their situation.':'Give a brief, honest assessment of how their finances are looking right now. Be specific. Keep it to 3-5 sentences.'}`;
+- For large amounts: make the stakes concrete and human — not abstract percentages.
+- Never be preachy. Never shame. But never sugarcoat something that genuinely matters.
+- If their finances are in good shape, acknowledge it genuinely before anything else.
+- Keep responses under 150 words unless the situation truly warrants more.`;
 }
 
-async function callAdvisorAPI(prompt){
+async function callAdvisorAPI(userContent){
   const resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       model:'claude-sonnet-4-6',
-      max_tokens:1000,
-      messages:[{role:'user',content:prompt}]
+      max_tokens:400,
+      system:buildAdvisorSystem(),
+      messages:[
+        ..._advisorHistory.slice(-8).map(m=>({role:m.role,content:m.content})),
+        {role:'user',content:userContent}
+      ]
     })
   });
   if(!resp.ok)throw new Error('API error '+resp.status);
@@ -2007,14 +1995,15 @@ async function openAdvisor(mode='general',spendContext=null){
   $('advisor-overlay').classList.add('open');
   const msgs=$('advisor-messages');
   if(msgs&&msgs.children.length===0){
-    // first open — generate a greeting assessment
     $('advisor-typing').style.display='block';
     try{
-      const prompt=buildAdvisorPrompt(null,spendContext);
-      const reply=await callAdvisorAPI(prompt);
+      const ctx=buildAdvisorContext();
+      const toneNote=spendContext?`\n\nTHIS SPECIFIC SITUATION: They just logged a ₱${spendContext.amt} spend on "${spendContext.label}" (${spendContext.cat}). Their disposable this month is ₱${getDisp().toLocaleString()}. That's ${Math.round(spendContext.amt/getDisp()*100)}% of disposable.\n\nTONE: ${spendContext.amt<500?'Light, 1-2 sentences, barely a comment.':spendContext.amt<2000?'Thoughtful, 2-3 sentences. Give real context — % of their budget, what it costs in work-hours.':spendContext.amt<10000?'Genuinely concerned, 3-4 sentences. Show actual goal impact with their numbers. Warm but real.':'Have a real conversation. Full picture. What this delays, what it costs, what it means. Direct and caring.'}`:'\n\nGive a 2-3 sentence honest assessment of how their finances look right now. Be specific with their numbers. If things are solid, say so.';
+      const userContent=`${ctx}${toneNote}`;
+      const reply=await callAdvisorAPI(userContent);
       $('advisor-typing').style.display='none';
       appendAdvisorMessage(reply,'assistant',spendContext&&spendContext.amt>5000);
-      _advisorHistory.push({role:'assistant',content:reply});
+      _advisorHistory.push({role:'user',content:userContent},{role:'assistant',content:reply});
     }catch(e){
       $('advisor-typing').style.display='none';
       appendAdvisorMessage("couldn't reach the API right now — check your connection and try again.",'assistant');
@@ -2022,17 +2011,23 @@ async function openAdvisor(mode='general',spendContext=null){
   }
 }
 function closeAdvisor(){$('advisor-overlay').classList.remove('open');}
+function clearAdvisorChat(){
+  const msgs=$('advisor-messages');if(msgs)msgs.innerHTML='';
+  _advisorHistory=[];
+  openAdvisor('general');
+}
 
 async function sendAdvisorMessage(){
   const inp=$('advisor-input');if(!inp)return;
   const msg=inp.value.trim();if(!msg)return;
   inp.value='';
   appendAdvisorMessage(msg,'user');
+  const ctx=buildAdvisorContext();
+  const userContent=`${ctx}\n\nTheir question: "${msg}"`;
   _advisorHistory.push({role:'user',content:msg});
   $('advisor-typing').style.display='block';
   try{
-    const prompt=buildAdvisorPrompt(msg);
-    const reply=await callAdvisorAPI(prompt);
+    const reply=await callAdvisorAPI(userContent);
     $('advisor-typing').style.display='none';
     appendAdvisorMessage(reply,'assistant');
     _advisorHistory.push({role:'assistant',content:reply});
@@ -2105,6 +2100,7 @@ async function fetchETFPrices(showToast=false){
       marketState=ms;updated++;if(viaProxy)usedProxy=true;
     });
     const usedFinnhub=results.some(r=>r.status==='fulfilled'&&r.value.source==='finnhub');
+    const failed=results.filter(r=>r.status==='rejected').length;
     const stateLabel=usedFinnhub?'📡 finnhub live':(MARKET_STATE_LABEL[marketState]??marketState);
     const now=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
     if(el){
