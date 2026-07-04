@@ -1018,6 +1018,16 @@ body.reduce-motion *{animation:none!important;transition:none!important;}
     </div>
 
     <div class="setting-row">
+      <div class="setting-label">google gemini api key <span style="color:var(--green);font-size:.58rem">free</span></div>
+      <div class="setting-sub">for the financial companion — free key at aistudio.google.com/app/apikey</div>
+      <div style="display:flex;gap:.5rem;margin-top:.55rem">
+        <input type="password" id="ant-key-inp" placeholder="AIza..." style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;">
+        <button class="btn btn-sm btn-green" onclick="saveGeminiKey()">save</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:.4rem" id="ant-key-status"></div>
+    </div>
+
+    <div class="setting-row">
       <div class="setting-label">finnhub api key</div>
       <div class="setting-sub">for live ETF prices — get a free key at finnhub.io</div>
       <div style="display:flex;gap:.5rem;margin-top:.55rem">
@@ -1085,6 +1095,7 @@ let S = {
   impulseSandbox: [],
   streams: [],
   finnhubKey: 'd92ek6hr01qraam0kgogd92ek6hr01qraam0kgp0',
+  geminiKey: '',
   prefs: {fontSize: 'normal', warmMode: false, reduceMotion: false},
   feePlatform: 'paypal',
   goalContributionsThisMonth: 0,
@@ -1911,8 +1922,10 @@ function togglePref(key){
   if(!S.prefs)S.prefs={};S.prefs[key]=!S.prefs[key];applyPrefs();saveState();
 }
 function openSettings(){
-  const inp=$('fh-key-inp');if(inp)inp.value=S.finnhubKey||'';
-  const st=$('fh-key-status');if(st)st.textContent=S.finnhubKey?'✓ key saved':'no key — using Yahoo Finance fallback';
+  const fhInp=$('fh-key-inp');if(fhInp)fhInp.value=S.finnhubKey||'';
+  const fhSt=$('fh-key-status');if(fhSt)fhSt.textContent=S.finnhubKey?'✓ key saved':'no key — using Yahoo Finance fallback';
+  const antInp=$('ant-key-inp');if(antInp)antInp.value=S.geminiKey||'';
+  const antSt=$('ant-key-status');if(antSt)antSt.textContent=S.geminiKey?'✓ key saved — companion is ready':'no key — get a free one at aistudio.google.com/app/apikey';
   $('settings-overlay').classList.add('open');
 }
 function closeSettings(){$('settings-overlay').classList.remove('open');}
@@ -1922,6 +1935,12 @@ function saveFinnhubKey(){
   const st=$('fh-key-status');
   if(st)st.textContent=val?'✓ key saved — prices will use Finnhub':'key cleared — falling back to Yahoo Finance';
   if(val)fetchETFPrices(true);
+}
+function saveGeminiKey(){
+  const val=($('ant-key-inp').value||'').trim();
+  S.geminiKey=val;saveState();
+  const st=$('ant-key-status');
+  if(st)st.textContent=val?'✓ key saved — companion is ready':'key cleared';
 }
 
 /* ═══ AI FINANCIAL COMPANION ═══ */
@@ -1964,22 +1983,30 @@ PERSONALITY RULES (follow strictly):
 }
 
 async function callAdvisorAPI(userContent){
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:400,
-      system:buildAdvisorSystem(),
-      messages:[
-        ..._advisorHistory.slice(-8).map(m=>({role:m.role,content:m.content})),
-        {role:'user',content:userContent}
-      ]
-    })
-  });
-  if(!resp.ok)throw new Error('API error '+resp.status);
+  if(!S.geminiKey) throw new Error('no-key');
+  // build conversation history in Gemini format
+  const history=_advisorHistory.slice(-8).map(m=>({
+    role: m.role==='assistant'?'model':'user',
+    parts:[{text:m.content}]
+  }));
+  const resp=await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${S.geminiKey}`,
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        systemInstruction:{parts:[{text:buildAdvisorSystem()}]},
+        contents:[...history,{role:'user',parts:[{text:userContent}]}],
+        generationConfig:{maxOutputTokens:400,temperature:0.85}
+      })
+    }
+  );
+  if(!resp.ok){
+    const err=await resp.json().catch(()=>({}));
+    throw new Error(err?.error?.message||'API error '+resp.status);
+  }
   const data=await resp.json();
-  return data.content?.find(b=>b.type==='text')?.text||'';
+  return data.candidates?.[0]?.content?.parts?.[0]?.text||'';
 }
 
 function appendAdvisorMessage(text,role='assistant',urgent=false){
@@ -1995,6 +2022,10 @@ async function openAdvisor(mode='general',spendContext=null){
   $('advisor-overlay').classList.add('open');
   const msgs=$('advisor-messages');
   if(msgs&&msgs.children.length===0){
+    if(!S.geminiKey){
+      appendAdvisorMessage("to use the companion, get a free Gemini API key at aistudio.google.com/app/apikey — takes about 30 seconds. then paste it in ⚙ settings → google gemini api key.",'assistant');
+      return;
+    }
     $('advisor-typing').style.display='block';
     try{
       const ctx=buildAdvisorContext();
@@ -2006,7 +2037,11 @@ async function openAdvisor(mode='general',spendContext=null){
       _advisorHistory.push({role:'user',content:userContent},{role:'assistant',content:reply});
     }catch(e){
       $('advisor-typing').style.display='none';
-      appendAdvisorMessage("couldn't reach the API right now — check your connection and try again.",'assistant');
+      if(e.message==='no-key'){
+        appendAdvisorMessage("add your free Gemini API key in ⚙ settings to enable the companion.",'assistant');
+      }else{
+        appendAdvisorMessage(`couldn't reach the API — ${e.message||'check your connection and try again.'}`,'assistant');
+      }
     }
   }
 }
@@ -2020,6 +2055,10 @@ function clearAdvisorChat(){
 async function sendAdvisorMessage(){
   const inp=$('advisor-input');if(!inp)return;
   const msg=inp.value.trim();if(!msg)return;
+  if(!S.geminiKey){
+    appendAdvisorMessage("add your free Gemini API key in ⚙ settings first.",'assistant');
+    return;
+  }
   inp.value='';
   appendAdvisorMessage(msg,'user');
   const ctx=buildAdvisorContext();
@@ -2033,7 +2072,7 @@ async function sendAdvisorMessage(){
     _advisorHistory.push({role:'assistant',content:reply});
   }catch(e){
     $('advisor-typing').style.display='none';
-    appendAdvisorMessage("something went wrong — try again in a moment.",'assistant');
+    appendAdvisorMessage(e.message==='no-key'?'add your free Gemini key in ⚙ settings.':`something went wrong — ${e.message||'try again.'}`,'assistant');
   }
 }
 
