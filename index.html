@@ -1153,6 +1153,7 @@ const FEE_SCHEDULES={
 
 /* ═══ HELPERS ═══ */
 const $=id=>document.getElementById(id);
+const fetchT=(url,opts={},ms=9000)=>Promise.race([fetch(url,opts),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
 const setText=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
 const totalFixed=()=>(S.expenses||[]).reduce((s,e)=>s+(e.amount||0),0);
 const getDisp=()=>Math.max(0,S.income-totalFixed());
@@ -1272,10 +1273,10 @@ const CCY=[
 
 /* ═══ FX FETCH ═══ */
 const FX_SRCS=[
-  ()=>fetch('https://api.exchangerate-api.com/v4/latest/PHP',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>d.rates),
-  ()=>fetch('https://open.er-api.com/v6/latest/PHP',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>d.rates),
-  ()=>fetch('https://api.frankfurter.app/latest?from=PHP',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>d.rates),
-  ()=>fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/php.json',{signal:AbortSignal.timeout(7000)}).then(r=>r.json()).then(d=>{const m=d.php,out={};for(const k in m)out[k.toUpperCase()]=m[k];return out;}),
+  ()=>fetchT('https://api.exchangerate-api.com/v4/latest/PHP', {}, 7000).then(r=>r.json()).then(d=>d.rates),
+  ()=>fetchT('https://open.er-api.com/v6/latest/PHP', {}, 7000).then(r=>r.json()).then(d=>d.rates),
+  ()=>fetchT('https://api.frankfurter.app/latest?from=PHP', {}, 7000).then(r=>r.json()).then(d=>d.rates),
+  ()=>fetchT('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/php.json', {}, 7000).then(r=>r.json()).then(d=>{const m=d.php,out={};for(const k in m)out[k.toUpperCase()]=m[k];return out;}),
 ];
 async function fetchFX(){
   setDot('fx','amber');setText('fx-status','fx: fetching…');
@@ -1984,29 +1985,60 @@ PERSONALITY RULES (follow strictly):
 
 async function callAdvisorAPI(userContent){
   if(!S.geminiKey) throw new Error('no-key');
-  // build conversation history in Gemini format
-  const history=_advisorHistory.slice(-8).map(m=>({
-    role: m.role==='assistant'?'model':'user',
-    parts:[{text:m.content}]
-  }));
-  const resp=await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${S.geminiKey}`,
-    {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        systemInstruction:{parts:[{text:buildAdvisorSystem()}]},
-        contents:[...history,{role:'user',parts:[{text:userContent}]}],
-        generationConfig:{maxOutputTokens:400,temperature:0.85}
-      })
-    }
-  );
-  if(!resp.ok){
-    const err=await resp.json().catch(()=>({}));
-    throw new Error(err?.error?.message||'API error '+resp.status);
+
+  // embed system prompt + context into the first user turn for max compatibility
+  const systemPrefix=buildAdvisorSystem()+'\n\n'+buildAdvisorContext()+'\n\n';
+
+  // only keep short conversational turns in history (not context dumps)
+  const convHistory=_advisorHistory.filter(m=>m.conversational).slice(-8);
+  const contents=[
+    {role:'user',parts:[{text:systemPrefix+userContent}]},
+    // if there's prior conversation, interleave it after the first model response
+    ...convHistory.flatMap(m=>[{
+      role:m.role==='assistant'?'model':'user',
+      parts:[{text:m.content}]
+    }])
+  ];
+
+  // if we have prior conversation, we need model to start (alternating requirement)
+  // simpler: just include context + question as one combined first message
+  const simpleContents=[{role:'user',parts:[{text:systemPrefix+'Conversation so far:\n'+convHistory.map(m=>`${m.role==='user'?'Me':'You'}: ${m.content}`).join('\n')+'\n\nNow: '+userContent}]}];
+
+  const body=JSON.stringify({
+    contents:simpleContents,
+    generationConfig:{maxOutputTokens:400,temperature:0.85}
+  });
+
+  const models=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-flash-8b'];
+  let lastErr='unknown error';
+  const timeout=ms=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms));
+  for(const model of models){
+    // newer AQ. keys use x-goog-api-key header; older AIza keys use ?key= param — try both
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${S.geminiKey}`;
+    try{
+      const resp=await Promise.race([
+        fetch(url,{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'x-goog-api-key':S.geminiKey
+          },
+          body
+        }),
+        timeout(15000)
+      ]);
+      const data=await resp.json();
+      if(!resp.ok){
+        lastErr=data?.error?.message||`${model}: HTTP ${resp.status}`;
+        console.warn('Gemini model failed:',model,lastErr);
+        continue;
+      }
+      const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(text){console.log('Gemini used:',model);return text;}
+      lastErr=`${model}: empty response`;
+    }catch(e){lastErr=`${model}: ${e.message}`;console.warn(lastErr);}
   }
-  const data=await resp.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  throw new Error(lastErr);
 }
 
 function appendAdvisorMessage(text,role='assistant',urgent=false){
@@ -2028,13 +2060,13 @@ async function openAdvisor(mode='general',spendContext=null){
     }
     $('advisor-typing').style.display='block';
     try{
-      const ctx=buildAdvisorContext();
-      const toneNote=spendContext?`\n\nTHIS SPECIFIC SITUATION: They just logged a ₱${spendContext.amt} spend on "${spendContext.label}" (${spendContext.cat}). Their disposable this month is ₱${getDisp().toLocaleString()}. That's ${Math.round(spendContext.amt/getDisp()*100)}% of disposable.\n\nTONE: ${spendContext.amt<500?'Light, 1-2 sentences, barely a comment.':spendContext.amt<2000?'Thoughtful, 2-3 sentences. Give real context — % of their budget, what it costs in work-hours.':spendContext.amt<10000?'Genuinely concerned, 3-4 sentences. Show actual goal impact with their numbers. Warm but real.':'Have a real conversation. Full picture. What this delays, what it costs, what it means. Direct and caring.'}`:'\n\nGive a 2-3 sentence honest assessment of how their finances look right now. Be specific with their numbers. If things are solid, say so.';
-      const userContent=`${ctx}${toneNote}`;
-      const reply=await callAdvisorAPI(userContent);
+      const toneNote=spendContext
+        ?`THIS SPECIFIC SITUATION: They just logged a ₱${spendContext.amt} spend on "${spendContext.label}" (${spendContext.cat}). Their disposable this month is ₱${getDisp().toLocaleString()}. That's ${Math.round(spendContext.amt/getDisp()*100)}% of disposable.\n\nTONE: ${spendContext.amt<500?'Light, 1-2 sentences, barely a comment.':spendContext.amt<2000?'Thoughtful, 2-3 sentences. Give real context — % of their budget, what it costs in work-hours.':spendContext.amt<10000?'Genuinely concerned, 3-4 sentences. Show actual goal impact with their numbers. Warm but real.':'Have a real conversation. Full picture. What this delays, what it costs, what it means. Direct and caring.'}`
+        :'Give a 2-3 sentence honest assessment of how their finances look right now. Be specific with their numbers. If things are solid, say so.';
+      const reply=await callAdvisorAPI(toneNote);
       $('advisor-typing').style.display='none';
       appendAdvisorMessage(reply,'assistant',spendContext&&spendContext.amt>5000);
-      _advisorHistory.push({role:'user',content:userContent},{role:'assistant',content:reply});
+      _advisorHistory.push({role:'assistant',content:reply,conversational:true});
     }catch(e){
       $('advisor-typing').style.display='none';
       if(e.message==='no-key'){
@@ -2061,18 +2093,16 @@ async function sendAdvisorMessage(){
   }
   inp.value='';
   appendAdvisorMessage(msg,'user');
-  const ctx=buildAdvisorContext();
-  const userContent=`${ctx}\n\nTheir question: "${msg}"`;
-  _advisorHistory.push({role:'user',content:msg});
+  _advisorHistory.push({role:'user',content:msg,conversational:true});
   $('advisor-typing').style.display='block';
   try{
-    const reply=await callAdvisorAPI(userContent);
+    const reply=await callAdvisorAPI(msg);
     $('advisor-typing').style.display='none';
     appendAdvisorMessage(reply,'assistant');
-    _advisorHistory.push({role:'assistant',content:reply});
+    _advisorHistory.push({role:'assistant',content:reply,conversational:true});
   }catch(e){
     $('advisor-typing').style.display='none';
-    appendAdvisorMessage(e.message==='no-key'?'add your free Gemini key in ⚙ settings.':`something went wrong — ${e.message||'try again.'}`,'assistant');
+    appendAdvisorMessage(e.message==='no-key'?'add your free Gemini key in ⚙ settings.':`something went wrong — ${e.message}`,'assistant');
   }
 }
 
@@ -2094,7 +2124,7 @@ async function fetchOneTicker(ticker){
   // prefer Finnhub when key is available — reliable, no CORS issues
   if(S.finnhubKey){
     const url=`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${S.finnhubKey}`;
-    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    const r=await fetchT(url, {}, 8000);
     if(!r.ok)throw new Error('Finnhub HTTP '+r.status);
     const d=await r.json();
     if(!d.c||d.c===0)throw new Error('no price from Finnhub');
@@ -2106,12 +2136,12 @@ async function fetchOneTicker(ticker){
   const yahooUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
   let resp,viaProxy=false;
   try{
-    resp=await fetch(yahooUrl,{signal:AbortSignal.timeout(6000)});
+    resp=await fetchT(yahooUrl, {}, 6000);
     if(!resp.ok)throw new Error('HTTP '+resp.status);
   }catch(e){
     viaProxy=true;
     const proxy=`https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
-    resp=await fetch(proxy,{signal:AbortSignal.timeout(9000)});
+    resp=await fetchT(proxy, {}, 9000);
     if(!resp.ok)throw new Error('proxy HTTP '+resp.status);
   }
   const d=await resp.json();
