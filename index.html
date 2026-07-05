@@ -1018,11 +1018,11 @@ body.reduce-motion *{animation:none!important;transition:none!important;}
     </div>
 
     <div class="setting-row">
-      <div class="setting-label">google gemini api key <span style="color:var(--green);font-size:.58rem">free</span></div>
-      <div class="setting-sub">for the financial companion — free key at aistudio.google.com/app/apikey</div>
+      <div class="setting-label">groq api key <span style="color:var(--green);font-size:.58rem">free</span></div>
+      <div class="setting-sub">for the financial companion — free key at console.groq.com → API Keys</div>
       <div style="display:flex;gap:.5rem;margin-top:.55rem">
-        <input type="password" id="ant-key-inp" placeholder="AIza..." style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;">
-        <button class="btn btn-sm btn-green" onclick="saveGeminiKey()">save</button>
+        <input type="password" id="ant-key-inp" placeholder="gsk_..." style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;">
+        <button class="btn btn-sm btn-green" onclick="saveGroqKey()">save</button>
       </div>
       <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:.4rem" id="ant-key-status"></div>
     </div>
@@ -1095,7 +1095,7 @@ let S = {
   impulseSandbox: [],
   streams: [],
   finnhubKey: 'd92ek6hr01qraam0kgogd92ek6hr01qraam0kgp0',
-  geminiKey: '',
+  groqKey: '',
   prefs: {fontSize: 'normal', warmMode: false, reduceMotion: false},
   feePlatform: 'paypal',
   goalContributionsThisMonth: 0,
@@ -1925,8 +1925,8 @@ function togglePref(key){
 function openSettings(){
   const fhInp=$('fh-key-inp');if(fhInp)fhInp.value=S.finnhubKey||'';
   const fhSt=$('fh-key-status');if(fhSt)fhSt.textContent=S.finnhubKey?'✓ key saved':'no key — using Yahoo Finance fallback';
-  const antInp=$('ant-key-inp');if(antInp)antInp.value=S.geminiKey||'';
-  const antSt=$('ant-key-status');if(antSt)antSt.textContent=S.geminiKey?'✓ key saved — companion is ready':'no key — get a free one at aistudio.google.com/app/apikey';
+  const antInp=$('ant-key-inp');if(antInp)antInp.value=S.groqKey||'';
+  const antSt=$('ant-key-status');if(antSt)antSt.textContent=S.groqKey?'✓ key saved — companion is ready':'no key — get a free one at console.groq.com';
   $('settings-overlay').classList.add('open');
 }
 function closeSettings(){$('settings-overlay').classList.remove('open');}
@@ -1937,9 +1937,9 @@ function saveFinnhubKey(){
   if(st)st.textContent=val?'✓ key saved — prices will use Finnhub':'key cleared — falling back to Yahoo Finance';
   if(val)fetchETFPrices(true);
 }
-function saveGeminiKey(){
+function saveGroqKey(){
   const val=($('ant-key-inp').value||'').trim();
-  S.geminiKey=val;saveState();
+  S.groqKey=val;saveState();
   const st=$('ant-key-status');
   if(st)st.textContent=val?'✓ key saved — companion is ready':'key cleared';
 }
@@ -1984,60 +1984,32 @@ PERSONALITY RULES (follow strictly):
 }
 
 async function callAdvisorAPI(userContent){
-  if(!S.geminiKey) throw new Error('no-key');
-
-  // embed system prompt + context into the first user turn for max compatibility
-  const systemPrefix=buildAdvisorSystem()+'\n\n'+buildAdvisorContext()+'\n\n';
-
-  // only keep short conversational turns in history (not context dumps)
+  if(!S.groqKey) throw new Error('no-key');
   const convHistory=_advisorHistory.filter(m=>m.conversational).slice(-8);
-  const contents=[
-    {role:'user',parts:[{text:systemPrefix+userContent}]},
-    // if there's prior conversation, interleave it after the first model response
-    ...convHistory.flatMap(m=>[{
-      role:m.role==='assistant'?'model':'user',
-      parts:[{text:m.content}]
-    }])
-  ];
-
-  // if we have prior conversation, we need model to start (alternating requirement)
-  // simpler: just include context + question as one combined first message
-  const simpleContents=[{role:'user',parts:[{text:systemPrefix+'Conversation so far:\n'+convHistory.map(m=>`${m.role==='user'?'Me':'You'}: ${m.content}`).join('\n')+'\n\nNow: '+userContent}]}];
-
-  const body=JSON.stringify({
-    contents:simpleContents,
-    generationConfig:{maxOutputTokens:400,temperature:0.85}
-  });
-
-  const models=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-flash-8b'];
-  let lastErr='unknown error';
   const timeout=ms=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms));
-  // AQ. keys = OAuth2 Bearer token; AIza keys = standard API key
-  const isBearer=S.geminiKey.startsWith('AQ.');
-  for(const model of models){
-    const url=isBearer
-      ?`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-      :`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${S.geminiKey}`;
-    const headers={'Content-Type':'application/json'};
-    if(isBearer)headers['Authorization']=`Bearer ${S.geminiKey}`;
-    else headers['x-goog-api-key']=S.geminiKey;
-    try{
-      const resp=await Promise.race([
-        fetch(url,{method:'POST',headers,body}),
-        timeout(15000)
-      ]);
-      const data=await resp.json();
-      if(!resp.ok){
-        lastErr=data?.error?.message||`${model}: HTTP ${resp.status}`;
-        console.warn('Gemini model failed:',model,lastErr);
-        continue;
-      }
-      const text=data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if(text){console.log('Gemini used:',model);return text;}
-      lastErr=`${model}: empty response`;
-    }catch(e){lastErr=`${model}: ${e.message}`;console.warn(lastErr);}
+  const resp=await Promise.race([
+    fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${S.groqKey}`},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens:400,
+        temperature:0.85,
+        messages:[
+          {role:'system',content:buildAdvisorSystem()+'\n\n'+buildAdvisorContext()},
+          ...convHistory.map(m=>({role:m.role==='assistant'?'assistant':'user',content:m.content})),
+          {role:'user',content:userContent}
+        ]
+      })
+    }),
+    timeout(15000)
+  ]);
+  if(!resp.ok){
+    const err=await resp.json().catch(()=>({}));
+    throw new Error(err?.error?.message||'Groq API error '+resp.status);
   }
-  throw new Error(lastErr);
+  const data=await resp.json();
+  return data.choices?.[0]?.message?.content||'';
 }
 
 function appendAdvisorMessage(text,role='assistant',urgent=false){
@@ -2053,8 +2025,8 @@ async function openAdvisor(mode='general',spendContext=null){
   $('advisor-overlay').classList.add('open');
   const msgs=$('advisor-messages');
   if(msgs&&msgs.children.length===0){
-    if(!S.geminiKey){
-      appendAdvisorMessage("to use the companion, get a free Gemini API key at aistudio.google.com/app/apikey — takes about 30 seconds. then paste it in ⚙ settings → google gemini api key.",'assistant');
+    if(!S.groqKey){
+      appendAdvisorMessage("to use the companion, get a free Groq API key at console.groq.com → API Keys — takes about a minute. then paste it in ⚙ settings → groq api key.",'assistant');
       return;
     }
     $('advisor-typing').style.display='block';
@@ -2069,7 +2041,7 @@ async function openAdvisor(mode='general',spendContext=null){
     }catch(e){
       $('advisor-typing').style.display='none';
       if(e.message==='no-key'){
-        appendAdvisorMessage("add your free Gemini API key in ⚙ settings to enable the companion.",'assistant');
+        appendAdvisorMessage("add your free Groq API key in ⚙ settings to enable the companion.",'assistant');
       }else{
         appendAdvisorMessage(`couldn't reach the API — ${e.message||'check your connection and try again.'}`,'assistant');
       }
@@ -2086,8 +2058,8 @@ function clearAdvisorChat(){
 async function sendAdvisorMessage(){
   const inp=$('advisor-input');if(!inp)return;
   const msg=inp.value.trim();if(!msg)return;
-  if(!S.geminiKey){
-    appendAdvisorMessage("add your free Gemini API key in ⚙ settings first.",'assistant');
+  if(!S.groqKey){
+    appendAdvisorMessage("add your free Groq API key in ⚙ settings first.",'assistant');
     return;
   }
   inp.value='';
@@ -2101,7 +2073,7 @@ async function sendAdvisorMessage(){
     _advisorHistory.push({role:'assistant',content:reply,conversational:true});
   }catch(e){
     $('advisor-typing').style.display='none';
-    appendAdvisorMessage(e.message==='no-key'?'add your free Gemini key in ⚙ settings.':`something went wrong — ${e.message}`,'assistant');
+    appendAdvisorMessage(e.message==='no-key'?'add your free Groq key in ⚙ settings.':`something went wrong — ${e.message}`,'assistant');
   }
 }
 
