@@ -741,6 +741,7 @@ body.reduce-motion *{animation:none!important;transition:none!important;}
     <div style="display:flex;gap:.35rem;margin-top:.6rem;flex-wrap:wrap">
       <input type="number" id="spend-amt" placeholder="₱ amount" style="flex:1;min-width:80px">
       <input type="text" id="spend-label" placeholder="what for?" style="flex:1.5;min-width:100px">
+      <input type="date" id="spend-date" style="flex:1;min-width:110px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:.38rem .55rem;font-family:var(--mono);font-size:.7rem;">
       <select id="spend-cat-sel" style="flex:.8;min-width:80px"></select>
       <button class="btn btn-sm btn-ghost" onclick="addCustomCategory()" title="add custom category">+</button>
       <button class="btn btn-sm btn-amber" onclick="addSpend()">log</button>
@@ -1034,12 +1035,19 @@ body.reduce-motion *{animation:none!important;transition:none!important;}
     </div>
 
     <div class="setting-row">
-      <div class="setting-label">font size</div>
-      <div class="setting-sub">adjust text to your comfort</div>
-      <div class="seg-ctrl" style="margin-top:.55rem">
-        <button class="seg-btn" data-size="small"  onclick="setPref('fontSize','small')">small</button>
-        <button class="seg-btn active" data-size="normal" onclick="setPref('fontSize','normal')">normal</button>
-        <button class="seg-btn" data-size="large"  onclick="setPref('fontSize','large')">large</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem">
+        <div>
+          <div class="setting-label">font size</div>
+          <div class="setting-sub">drag to adjust text size</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:.7rem;color:var(--green)" id="font-size-label">15px</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.65rem">
+        <span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">A</span>
+        <input type="range" id="font-size-slider" min="12" max="20" step="1" value="15"
+          oninput="setFontSizeVal(this.value)"
+          style="flex:1;accent-color:var(--green);cursor:pointer;height:4px">
+        <span style="font-family:var(--mono);font-size:.85rem;color:var(--muted)">A</span>
       </div>
     </div>
 
@@ -1638,18 +1646,28 @@ function renderSandbox(){
 /* ═══ SPEND TRACKER ═══ */
 const CAT_COLORS={food:'var(--amber)',transport:'var(--blue)',shopping:'var(--red)',entertainment:'var(--purple)',subscriptions:'var(--green)',other:'var(--muted)'};
 const CAT_LABELS={food:'🍜 food',transport:'🚌 commute',shopping:'🛍 shopping',entertainment:'🎮 fun',subscriptions:'📱 subs',other:'📦 other'};
+function getSpendDate(){
+  const d=$('spend-date');
+  return d&&d.value?d.value:todayKey();
+}
 function addSpend(){
   const amt=parseFloat($('spend-amt').value),label=$('spend-label').value.trim(),cat=$('spend-cat-sel').value;
+  const date=getSpendDate();
   if(!amt||amt<=0){toast('⚠ enter an amount');return;}
-  if((cat==='shopping'||cat==='entertainment')&&amt>500){pendingSpendData={amt,label:label||cat,cat,date:todayKey(),ts:Date.now()};showImpulsePause(amt);return;}
-  commitSpend(amt,label||cat,cat);
+  if((cat==='shopping'||cat==='entertainment')&&amt>500&&date===todayKey()){
+    pendingSpendData={amt,label:label||cat,cat,date,ts:Date.now()};showImpulsePause(amt);return;
+  }
+  commitSpend(amt,label||cat,cat,date);
 }
-function commitSpend(amt,label,cat){
-  S.spends.push({id:Date.now(),amt,label,cat,date:todayKey(),ts:Date.now()});
-  $('spend-amt').value='';$('spend-label').value='';renderSpend();renderLogs();
-  toast('logged: '+fmtPhp(amt));pendingSpendData=null;
-  // surface advisor for meaningful spends — scales tone with amount
-  if(amt>=500)maybeAdvisSpend(amt,label,cat);
+function commitSpend(amt,label,cat,date){
+  date=date||todayKey();
+  S.spends.push({id:Date.now(),amt,label,cat,date,ts:Date.now()});
+  $('spend-amt').value='';$('spend-label').value='';
+  // reset date to today after logging
+  const di=$('spend-date');if(di)di.value=todayKey();
+  renderSpend();renderLogs();
+  toast('logged: '+fmtPhp(amt)+' · '+date);pendingSpendData=null;
+  if(amt>=500&&date===todayKey())maybeAdvisSpend(amt,label,cat);
 }
 function showImpulsePause(amt){
   const overlay=$('impulse-overlay'),confirm=$('impulse-confirm'),sandboxBtn=$('impulse-sandbox-it');
@@ -1676,7 +1694,16 @@ function renderSpend(){
   const catTotals={};monthSpends.forEach(s=>{catTotals[s.cat]=(catTotals[s.cat]||0)+s.amt;});
   const bar=$('spend-cat-bar');if(bar){const total=monthTotal||1;bar.innerHTML=Object.entries(catTotals).map(([cat,amt])=>`<div style="flex:${amt/total};background:${CAT_COLORS[cat]||'var(--muted)'}"></div>`).join('');}
   const cbd=$('cat-breakdown');if(cbd){const sorted=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);cbd.innerHTML=sorted.length?sorted.map(([cat,amt])=>`<div style="display:flex;justify-content:space-between;padding:.18rem 0;border-bottom:1px solid var(--border)"><span>${CAT_LABELS[cat]||cat}</span><span style="color:${CAT_COLORS[cat]};font-weight:500">${fmtPhp(amt)}</span></div>`).join(''):'<span>no spends this month yet</span>';}
-  const sl=$('spend-list');if(sl){const recent=[...todaySpends].reverse().slice(0,8);sl.innerHTML=recent.length?recent.map(s=>`<div class="spend-row"><span class="spend-cat" style="background:${CAT_COLORS[s.cat]}22;color:${CAT_COLORS[s.cat]}">${CAT_LABELS[s.cat]||s.cat}</span><span class="spend-guilt">${s.label}</span><span style="font-family:var(--mono);font-size:.78rem;font-weight:500">${fmtPhp(s.amt)}</span><button onclick="delSpend(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.6rem;padding:.1rem .25rem">✕</button></div>`).join(''):'<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:.35rem 0">nothing logged today — clean slate ✓</div>';}
+  const sl=$('spend-list');if(sl){
+    const recent=[...S.spends].sort((a,b)=>b.ts-a.ts).slice(0,10);
+    sl.innerHTML=recent.length?recent.map(s=>`<div class="spend-row">
+      <span class="spend-cat" style="background:${CAT_COLORS[s.cat]||'var(--surface3)'}22;color:${CAT_COLORS[s.cat]||'var(--muted)'}">${CAT_LABELS[s.cat]||s.cat}</span>
+      <span class="spend-guilt">${s.label}</span>
+      <span style="font-family:var(--mono);font-size:.58rem;color:var(--muted);flex-shrink:0">${s.date}</span>
+      <span style="font-family:var(--mono);font-size:.78rem;font-weight:500;flex-shrink:0">${fmtPhp(s.amt)}</span>
+      <button onclick="delSpend(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.6rem;padding:.1rem .25rem;flex-shrink:0">✕</button>
+    </div>`).join(''):'<div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);padding:.35rem 0">nothing logged yet — clean slate ✓</div>';
+  }
 }
 function delSpend(id){S.spends=S.spends.filter(s=>s.id!==id);renderSpend();renderLogs();toast('entry removed');}
 
@@ -2126,17 +2153,24 @@ function switchLogTab(id,btn){
 /* ═══ SETTINGS / PREFS ═══ */
 function applyPrefs(){
   const p=S.prefs||{};
-  document.body.classList.remove('font-small','font-large','warm','reduce-motion');
-  if(p.fontSize==='small')document.body.classList.add('font-small');
-  if(p.fontSize==='large')document.body.classList.add('font-large');
-  if(p.warmMode)document.body.classList.add('warm');
-  if(p.reduceMotion)document.body.classList.add('reduce-motion');
-  // sync seg buttons
-  document.querySelectorAll('.seg-btn').forEach(b=>{
-    b.classList.toggle('active',b.dataset.size===(p.fontSize||'normal'));
-  });
+  // font size — numeric px value, applied to root so rem values scale
+  const size=p.fontSizeVal||15;
+  document.documentElement.style.fontSize=size+'px';
+  // update slider + label if settings panel is open
+  const sl=$('font-size-slider');if(sl)sl.value=size;
+  const lbl=$('font-size-label');if(lbl)lbl.textContent=size+'px';
+  // warm mode
+  document.body.classList.toggle('warm',!!p.warmMode);
+  document.body.classList.toggle('reduce-motion',!!p.reduceMotion);
   const wt=$('warm-toggle');if(wt)wt.classList.toggle('on',!!p.warmMode);
   const mt=$('motion-toggle');if(mt)mt.classList.toggle('on',!!p.reduceMotion);
+}
+function setFontSizeVal(val){
+  if(!S.prefs)S.prefs={};
+  S.prefs.fontSizeVal=parseInt(val);
+  const lbl=$('font-size-label');if(lbl)lbl.textContent=val+'px';
+  document.documentElement.style.fontSize=val+'px';
+  saveState();
 }
 function setPref(key,val){
   if(!S.prefs)S.prefs={};S.prefs[key]=val;applyPrefs();saveState();
@@ -2145,10 +2179,12 @@ function togglePref(key){
   if(!S.prefs)S.prefs={};S.prefs[key]=!S.prefs[key];applyPrefs();saveState();
 }
 function openSettings(){
+  const sl=$('font-size-slider');if(sl)sl.value=S.prefs?.fontSizeVal||15;
+  const lbl=$('font-size-label');if(lbl)lbl.textContent=(S.prefs?.fontSizeVal||15)+'px';
   const fhInp=$('fh-key-inp');if(fhInp)fhInp.value=S.finnhubKey||'';
   const fhSt=$('fh-key-status');if(fhSt)fhSt.textContent=S.finnhubKey?'✓ key saved':'no key — using Yahoo Finance fallback';
   const antInp=$('ant-key-inp');if(antInp)antInp.value=S.groqKey||'';
-  const antSt=$('ant-key-status');if(antSt)antSt.textContent=S.groqKey?'✓ key saved — companion is ready':'no key — get a free one at console.groq.com';
+  const antSt=$('ant-key-status');if(antSt)antSt.textContent=S.groqKey?'✓ key saved — NOVO is ready':'no key — get a free one at console.groq.com';
   $('settings-overlay').classList.add('open');
 }
 function closeSettings(){$('settings-overlay').classList.remove('open');}
@@ -2508,6 +2544,7 @@ function init(){
   $('spend-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addSpend();});
   $('fee-amount').addEventListener('keydown',e=>{if(e.key==='Enter')calcFees();});
   renderCheckin();calcFees();
+  const di=$('spend-date');if(di)di.value=todayKey();
 }
 try{init();}catch(e){console.error(e);}
 </script>
